@@ -329,18 +329,13 @@ class UserListViewModel(
     private val getUsersUseCase: GetUsersUseCase
 ) : BaseViewModel<UserListState, UserListEvent>(UserListState()) {
 
-    fun loadUsers() = launch {
-        setState { copy(isLoading = true, error = null) }
-
-        getUsersUseCase()
-            .onSuccess { users ->
-                setState { copy(users = users, isLoading = false) }
-            }
-            .onError { exception, _ ->
-                setState { copy(isLoading = false, error = exception.message) }
-                sendEvent(UserListEvent.ShowError(exception.message ?: "Unknown error"))
-            }
-    }
+    fun loadUsers() = execute(
+        call = { getUsersUseCase() },
+        onLoading = { copy(isLoading = true, error = null) },
+        onSuccess = { copy(users = it, isLoading = false) },
+        onError = { copy(isLoading = false, error = it.message) },
+        errorEvent = { UserListEvent.ShowError(it.message ?: "Unknown error") }
+    )
 }
 
 // presentation/ui/UserListScreen.kt
@@ -498,17 +493,50 @@ TokenEventBus.events.collect { event ->
 
 The ui-state module provides **presentation layer** base classes.
 
-**BaseViewModel** — your ViewModels consume domain use cases, not data sources directly:
+**BaseViewModel** provides three helpers for handling async operations, from simplest to most flexible:
+
+**`collectResource()`** — zero boilerplate, pipes a `Flow<Resource<T>>` straight into a `MutableStateFlow`:
+
+```kotlin
+class SpotlightViewModel(
+    private val useCase: GetSpotlightUseCase
+) : BaseViewModel<Unit, SpotlightEvent>(Unit) {
+
+    private val _spotlight = MutableStateFlow<Resource<List<Spotlight>>>(Resource.Loading())
+    val spotlight = _spotlight.asStateFlow()
+
+    fun load() = collectResource(_spotlight) { useCase.spotlight() }
+}
+```
+
+**`execute()`** — one-shot suspend calls with state reducers:
 
 ```kotlin
 class ProductViewModel(
-    private val getProductsUseCase: GetProductsUseCase  // domain layer
+    private val getProductsUseCase: GetProductsUseCase
 ) : BaseViewModel<ProductState, ProductEvent>(ProductState()) {
 
     fun loadProducts() = execute(
         call = { getProductsUseCase() },
         onLoading = { copy(isLoading = true) },
         onSuccess = { copy(products = it, isLoading = false) },
+        onError = { copy(error = it.message, isLoading = false) }
+    )
+}
+```
+
+**`collect()`** — reactive streams (`Flow<Resource<T>>`) with state reducers:
+
+```kotlin
+class BookmarkViewModel(
+    private val observeBookmarksUseCase: ObserveBookmarksUseCase
+) : BaseViewModel<BookmarkState, BookmarkEvent>(BookmarkState()) {
+
+    fun observe() = collect(
+        flow = { observeBookmarksUseCase() },
+        distinctUntilChanged = true,
+        onLoading = { copy(isLoading = true) },
+        onSuccess = { copy(bookmarks = it, isLoading = false) },
         onError = { copy(error = it.message, isLoading = false) }
     )
 }
