@@ -36,9 +36,16 @@ android {
         compose = true
         buildConfig = true
     }
+
+    compileOptions {
+        isCoreLibraryDesugaringEnabled = true
+    }
 }
 
 dependencies {
+    // Core library desugaring (required by firebase-config GitLive)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+
     // The shared KMP sample library — brings all composables & logic
     implementation(project(":sample"))
 

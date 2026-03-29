@@ -53,6 +53,9 @@ ksp = "2.3.6"
 datastore = "1.2.1"
 
 [libraries]
+# Desugaring
+desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.4" }
+
 # Kotlin
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 
