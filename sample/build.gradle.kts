@@ -33,6 +33,21 @@ kotlin {
             // Single umbrella SDK dependency — re-exports all sub-modules + Compose
             implementation(project(":miru-sdk"))
 
+            // Third-party libs used directly by sample code
+            // (these are `implementation` in SDK sub-modules, so not transitive)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.navigation.compose)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
+            implementation(libs.ktor.client.core)
+            implementation(libs.napier)
+            implementation(libs.lifecycle.viewmodel)
+            implementation(libs.lifecycle.runtime.compose)
+
             // Room + DataStore (sample has its own Room entities)
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
