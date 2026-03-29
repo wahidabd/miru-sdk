@@ -1,7 +1,5 @@
 package com.miru.sdk.sample.presentation.home
 
-import com.miru.sdk.core.onError
-import com.miru.sdk.core.onSuccess
 import com.miru.sdk.sample.domain.model.Article
 import com.miru.sdk.sample.domain.model.ArticleCategory
 import com.miru.sdk.sample.domain.usecase.GetArticlesUseCase
@@ -30,18 +28,13 @@ class HomeViewModel(
         loadArticles()
     }
 
-    fun loadArticles() = launch {
-        setState { copy(isLoading = true, error = null) }
-
-        getArticlesUseCase(currentState.selectedCategory)
-            .onSuccess { articles ->
-                setState { copy(articles = articles, isLoading = false) }
-            }
-            .onError { exception, _ ->
-                setState { copy(isLoading = false, error = exception.message) }
-                sendEvent(HomeEvent.ShowError(exception.message ?: "Failed to load articles"))
-            }
-    }
+    fun loadArticles() = execute(
+        call = { getArticlesUseCase(currentState.selectedCategory) },
+        onLoading = { copy(isLoading = true, error = null) },
+        onSuccess = { copy(articles = it, isLoading = false) },
+        onError = { copy(isLoading = false, error = it.message) },
+        errorEvent = { HomeEvent.ShowError(it.message ?: "Failed to load articles") }
+    )
 
     fun selectCategory(category: ArticleCategory) {
         setState { copy(selectedCategory = category) }
@@ -55,7 +48,6 @@ class HomeViewModel(
     fun toggleBookmark(article: Article) = launch {
         val isNowBookmarked = toggleBookmarkUseCase(article)
 
-        // Update the article in the local list
         setState {
             copy(articles = articles.map {
                 if (it.id == article.id) it.copy(isBookmarked = isNowBookmarked) else it

@@ -1,7 +1,5 @@
 package com.miru.sdk.sample.presentation.detail
 
-import com.miru.sdk.core.onError
-import com.miru.sdk.core.onSuccess
 import com.miru.sdk.sample.domain.model.Article
 import com.miru.sdk.sample.domain.usecase.GetArticleDetailUseCase
 import com.miru.sdk.sample.domain.usecase.ToggleBookmarkUseCase
@@ -28,18 +26,13 @@ class DetailViewModel(
         loadArticle()
     }
 
-    fun loadArticle() = launch {
-        setState { copy(isLoading = true, error = null) }
-
-        getArticleDetailUseCase(articleId)
-            .onSuccess { article ->
-                setState { copy(article = article, isLoading = false) }
-            }
-            .onError { exception, _ ->
-                setState { copy(isLoading = false, error = exception.message) }
-                sendEvent(DetailEvent.ShowError(exception.message ?: "Failed to load article"))
-            }
-    }
+    fun loadArticle() = execute(
+        call = { getArticleDetailUseCase(articleId) },
+        onLoading = { copy(isLoading = true, error = null) },
+        onSuccess = { copy(article = it, isLoading = false) },
+        onError = { copy(isLoading = false, error = it.message) },
+        errorEvent = { DetailEvent.ShowError(it.message ?: "Failed to load article") }
+    )
 
     fun toggleBookmark() = launch {
         val article = currentState.article ?: return@launch

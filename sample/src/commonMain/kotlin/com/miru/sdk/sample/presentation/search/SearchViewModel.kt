@@ -1,7 +1,5 @@
 package com.miru.sdk.sample.presentation.search
 
-import com.miru.sdk.core.onError
-import com.miru.sdk.core.onSuccess
 import com.miru.sdk.sample.domain.model.Article
 import com.miru.sdk.sample.domain.usecase.SearchArticlesUseCase
 import com.miru.sdk.sample.domain.usecase.ToggleBookmarkUseCase
@@ -28,19 +26,16 @@ class SearchViewModel(
         setState { copy(query = query) }
     }
 
-    fun search() = launch {
+    fun search() {
         val query = currentState.query.trim()
-        if (query.isBlank()) return@launch
+        if (query.isBlank()) return
 
-        setState { copy(isLoading = true, error = null, hasSearched = true) }
-
-        searchArticlesUseCase(query)
-            .onSuccess { articles ->
-                setState { copy(results = articles, isLoading = false) }
-            }
-            .onError { exception, _ ->
-                setState { copy(isLoading = false, error = exception.message) }
-            }
+        execute(
+            call = { searchArticlesUseCase(query) },
+            onLoading = { copy(isLoading = true, error = null, hasSearched = true) },
+            onSuccess = { copy(results = it, isLoading = false) },
+            onError = { copy(isLoading = false, error = it.message) }
+        )
     }
 
     fun onArticleClick(articleId: Long) {

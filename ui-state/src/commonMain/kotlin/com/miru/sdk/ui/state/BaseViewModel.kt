@@ -91,13 +91,71 @@ abstract class BaseViewModel<State, Event>(initialState: State) : ViewModel() {
                 is Resource.Loading -> {
                     onLoading?.invoke()
                 }
+
                 is Resource.Success -> {
                     onSuccess(resource.data)
                 }
+
                 is Resource.Error -> {
                     onError?.invoke(resource.exception)
                 }
             }
+        }
+    }
+
+    /**
+     * Executes a suspend call that returns [Resource] and manages loading/success/error
+     * state transitions automatically via state reducers.
+     *
+     * This eliminates the repetitive pattern of:
+     * ```
+     * setState { copy(isLoading = true, error = null) }
+     * someCall()
+     *     .onSuccess { setState { copy(data = it, isLoading = false) } }
+     *     .onError { setState { copy(isLoading = false, error = it.message) } }
+     * ```
+     *
+     * Instead, you write:
+     * ```
+     * execute(
+     *     call = { getArticlesUseCase(category) },
+     *     onLoading = { copy(isLoading = true, error = null) },
+     *     onSuccess = { copy(articles = it, isLoading = false) },
+     *     onError = { copy(isLoading = false, error = it.message) },
+     *     errorEvent = { HomeEvent.ShowError(it.message ?: "Unknown error") }
+     * )
+     * ```
+     *
+     * @param T The type of data returned by the call
+     * @param call The suspend function that returns a [Resource]
+     * @param onLoading Optional state reducer applied before the call executes
+     * @param onSuccess State reducer applied when the call succeeds, receives the data
+     * @param onError Optional state reducer applied on error, receives the exception.
+     *   If not provided, no state change happens on error.
+     * @param errorEvent Optional factory to create an Event from the exception.
+     *   If provided, the event is sent via [sendEvent] on error.
+     * @return The launched Job
+     */
+    protected fun <T> execute(
+        call: suspend () -> Resource<T>,
+        onLoading: (State.() -> State)? = null,
+        onSuccess: State.(T) -> State,
+        onError: (State.(AppException) -> State)? = null,
+        errorEvent: ((AppException) -> Event)? = null
+    ): Job = launch {
+        onLoading?.let { setState(it) }
+
+        when (val result = call()) {
+            is Resource.Success -> {
+                setState { onSuccess(result.data) }
+            }
+
+            is Resource.Error -> {
+                onError?.let { setState { it(result.exception) } }
+                errorEvent?.let { sendEvent(it(result.exception)) }
+            }
+
+            is Resource.Loading -> Unit
         }
     }
 }
