@@ -1,6 +1,5 @@
 package com.miru.sdk.sample
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -14,6 +13,7 @@ import com.miru.sdk.sample.presentation.detail.DetailViewModel
 import com.miru.sdk.sample.presentation.home.HomeScreen
 import com.miru.sdk.sample.presentation.search.SearchScreen
 import com.miru.sdk.sample.presentation.settings.SettingsScreen
+import com.miru.sdk.ui.components.theme.MiruTheme
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -29,7 +29,7 @@ import org.koin.core.parameter.parametersOf
  */
 @Composable
 fun SampleApp() {
-    MaterialTheme {
+    MiruTheme {
         val navController = rememberNavController()
 
         NavHost(

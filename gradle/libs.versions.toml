@@ -43,6 +43,9 @@ firebase-android = "33.7.0"
 kmpauth = "2.5.0-alpha01"
 facebook-android-login = "17.0.0"
 
+# Activity Compose (for sample app)
+activity-compose = "1.10.1"
+
 # Persistent (Room + DataStore)
 room = "2.8.4"
 sqlite = "2.6.2"
@@ -112,6 +115,9 @@ firebase-android-auth = { module = "com.google.firebase:firebase-auth-ktx", vers
 kmpauth-google = { module = "io.github.mirzemehdi:kmpauth-google", version.ref = "kmpauth" }
 kmpauth-uihelper = { module = "io.github.mirzemehdi:kmpauth-uihelper", version.ref = "kmpauth" }
 facebook-login = { module = "com.facebook.android:facebook-login", version.ref = "facebook-android-login" }
+
+# Activity Compose
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
 
 # Room KMP
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }

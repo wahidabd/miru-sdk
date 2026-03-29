@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.kotlin.multiplatform.library)
+    alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
@@ -9,11 +9,7 @@ plugins {
 }
 
 kotlin {
-    androidLibrary {
-        namespace = "com.miru.sdk.sample"
-        compileSdk = 36
-        minSdk = 24
-    }
+    androidTarget()
 
     iosX64()
     iosArm64()
@@ -81,10 +77,34 @@ kotlin {
             implementation(libs.lifecycle.runtime.compose)
         }
 
+        androidMain.dependencies {
+            implementation(libs.koin.android)
+            implementation(libs.ktor.client.okhttp)
+            implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.androidx.activity.compose)
+        }
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
         }
+    }
+}
+
+android {
+    namespace = "com.miru.sdk.sample"
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = "com.miru.sdk.sample"
+        minSdk = 24
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0.0"
+    }
+
+    buildFeatures {
+        compose = true
     }
 }
 

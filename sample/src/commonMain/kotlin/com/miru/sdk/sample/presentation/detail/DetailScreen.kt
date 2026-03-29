@@ -1,10 +1,8 @@
 package com.miru.sdk.sample.presentation.detail
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -17,16 +15,17 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.miru.sdk.ui.components.error.MiruErrorView
+import com.miru.sdk.ui.components.loading.MiruFullScreenLoading
+import com.miru.sdk.ui.components.theme.MiruTheme
 import com.miru.sdk.ui.state.collectAsEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,8 +59,8 @@ fun DetailScreen(
                                 imageVector = if (article.isBookmarked) Icons.Default.Bookmark
                                 else Icons.Default.BookmarkBorder,
                                 contentDescription = "Bookmark",
-                                tint = if (article.isBookmarked) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurface
+                                tint = if (article.isBookmarked) MiruTheme.colors.primary
+                                else MiruTheme.colors.onSurface
                             )
                         }
                     }
@@ -71,20 +70,17 @@ fun DetailScreen(
     ) { padding ->
         when {
             state.isLoading -> {
-                Box(
-                    Modifier.fillMaxSize().padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Loading...")
-                }
+                MiruFullScreenLoading(
+                    message = "Loading article...",
+                    modifier = Modifier.padding(padding)
+                )
             }
             state.error != null -> {
-                Box(
-                    Modifier.fillMaxSize().padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(state.error ?: "Unknown error")
-                }
+                MiruErrorView(
+                    message = state.error ?: "Failed to load article",
+                    onRetry = { viewModel.loadArticle() },
+                    modifier = Modifier.fillMaxSize().padding(padding)
+                )
             }
             state.article != null -> {
                 val article = state.article!!
@@ -98,7 +94,8 @@ fun DetailScreen(
                     // Title
                     Text(
                         text = article.title,
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MiruTheme.typography.headlineSmall,
+                        color = MiruTheme.colors.onBackground,
                         fontWeight = FontWeight.Bold
                     )
 
@@ -107,8 +104,8 @@ fun DetailScreen(
                     // Source & Author
                     Text(
                         text = "${article.source} • ${article.author}",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
+                        style = MiruTheme.typography.labelLarge,
+                        color = MiruTheme.colors.primary
                     )
 
                     Spacer(Modifier.height(4.dp))
@@ -116,8 +113,8 @@ fun DetailScreen(
                     // Published date
                     Text(
                         text = article.publishedAt.toString(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MiruTheme.typography.labelSmall,
+                        color = MiruTheme.colors.onBackground.copy(alpha = 0.5f)
                     )
 
                     Spacer(Modifier.height(16.dp))
@@ -126,9 +123,9 @@ fun DetailScreen(
                     if (article.description.isNotBlank()) {
                         Text(
                             text = article.description,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MiruTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MiruTheme.colors.onBackground.copy(alpha = 0.8f)
                         )
                         Spacer(Modifier.height(16.dp))
                     }
@@ -136,8 +133,8 @@ fun DetailScreen(
                     // Content
                     Text(
                         text = article.content,
-                        style = MaterialTheme.typography.bodyMedium,
-                        lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
+                        style = MiruTheme.typography.bodyMedium,
+                        color = MiruTheme.colors.onBackground
                     )
                 }
             }

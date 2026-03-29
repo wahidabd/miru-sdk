@@ -14,11 +14,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.miru.sdk.ui.components.theme.MiruTheme
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,7 +41,13 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Settings", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        "Settings",
+                        fontWeight = FontWeight.Bold,
+                        color = MiruTheme.colors.onBackground
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -79,8 +85,8 @@ fun SettingsScreen(
             // Font Size Selection
             Text(
                 text = "Font Size",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium
+                style = MiruTheme.typography.titleMedium,
+                color = MiruTheme.colors.onBackground
             )
             Spacer(Modifier.height(8.dp))
 
@@ -95,7 +101,8 @@ fun SettingsScreen(
                 ) {
                     Text(
                         text = fontSize.displayName,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MiruTheme.typography.bodyLarge,
+                        color = MiruTheme.colors.onBackground
                     )
                     RadioButton(
                         selected = state.selectedFontSize == fontSize,
@@ -109,13 +116,13 @@ fun SettingsScreen(
             // App info
             Text(
                 text = "Miru News Sample",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MiruTheme.typography.titleSmall,
+                color = MiruTheme.colors.onBackground.copy(alpha = 0.5f)
             )
             Text(
                 text = "Built with Miru SDK v0.1.0",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MiruTheme.typography.bodySmall,
+                color = MiruTheme.colors.onBackground.copy(alpha = 0.5f)
             )
         }
     }
@@ -136,13 +143,13 @@ private fun SettingsSwitch(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium
+                style = MiruTheme.typography.titleMedium,
+                color = MiruTheme.colors.onBackground
             )
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MiruTheme.typography.bodySmall,
+                color = MiruTheme.colors.onBackground.copy(alpha = 0.5f)
             )
         }
         Switch(checked = checked, onCheckedChange = { onToggle() })

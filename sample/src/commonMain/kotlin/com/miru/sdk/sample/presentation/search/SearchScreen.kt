@@ -1,6 +1,5 @@
 package com.miru.sdk.sample.presentation.search
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,12 +21,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -42,6 +38,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.miru.sdk.sample.domain.model.Article
+import com.miru.sdk.ui.components.card.MiruCard
+import com.miru.sdk.ui.components.error.MiruEmptyView
+import com.miru.sdk.ui.components.error.MiruErrorView
+import com.miru.sdk.ui.components.loading.MiruFullScreenLoading
+import com.miru.sdk.ui.components.theme.MiruTheme
 import com.miru.sdk.ui.state.collectAsEffect
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -89,33 +90,33 @@ fun SearchScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { viewModel.search() }),
-                shape = RoundedCornerShape(12.dp)
+                shape = MiruTheme.shapes.medium
             )
 
             when {
                 state.isLoading -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Searching...")
-                    }
+                    MiruFullScreenLoading(message = "Searching...")
                 }
                 state.error != null -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(state.error ?: "Search failed")
-                    }
+                    MiruErrorView(
+                        message = state.error ?: "Search failed",
+                        onRetry = { viewModel.search() },
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
                 state.hasSearched && state.results.isEmpty() -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            "No results found for \"${state.query}\"",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    MiruEmptyView(
+                        title = "No results",
+                        message = "No articles found for \"${state.query}\". Try a different search term.",
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
                 !state.hasSearched -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                             "Search for news articles",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = MiruTheme.typography.bodyMedium,
+                            color = MiruTheme.colors.onBackground.copy(alpha = 0.5f)
                         )
                     }
                 }
@@ -144,13 +145,7 @@ private fun SearchResultCard(
     onClick: () -> Unit,
     onBookmarkClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        shape = RoundedCornerShape(12.dp)
-    ) {
+    MiruCard(onClick = onClick) {
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.Top
@@ -158,24 +153,24 @@ private fun SearchResultCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = article.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
+                    style = MiruTheme.typography.titleSmall,
+                    color = MiruTheme.colors.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = article.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiruTheme.typography.bodySmall,
+                    color = MiruTheme.colors.onSurface.copy(alpha = 0.7f),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = article.source,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
+                    style = MiruTheme.typography.labelSmall,
+                    color = MiruTheme.colors.primary
                 )
             }
 
@@ -186,8 +181,8 @@ private fun SearchResultCard(
                     imageVector = if (article.isBookmarked) Icons.Default.Bookmark
                     else Icons.Default.BookmarkBorder,
                     contentDescription = "Bookmark",
-                    tint = if (article.isBookmarked) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = if (article.isBookmarked) MiruTheme.colors.primary
+                    else MiruTheme.colors.onSurface.copy(alpha = 0.5f)
                 )
             }
         }
