@@ -187,11 +187,14 @@ dependencyResolutionManagement {
 }
 ```
 
-Add dependencies in your module's `build.gradle.kts`:
+Add the dependency in your module's `build.gradle.kts`. You can include the entire SDK with a single dependency, or pick individual modules:
 
 ```kotlin
 dependencies {
-    // All modules
+    // Option 1: All-in-one (includes every module)
+    implementation("com.github.wahidabd.miru-sdk:miru-sdk:<version>")
+
+    // Option 2: Pick only what you need
     implementation("com.github.wahidabd.miru-sdk:core:<version>")
     implementation("com.github.wahidabd.miru-sdk:network:<version>")
     implementation("com.github.wahidabd.miru-sdk:ui-state:<version>")
@@ -199,6 +202,7 @@ dependencies {
     implementation("com.github.wahidabd.miru-sdk:ui-components:<version>")
     implementation("com.github.wahidabd.miru-sdk:firebase:<version>")
     implementation("com.github.wahidabd.miru-sdk:auth:<version>")
+    implementation("com.github.wahidabd.miru-sdk:persistent:<version>")
     implementation("com.github.wahidabd.miru-sdk:di:<version>")
 }
 ```

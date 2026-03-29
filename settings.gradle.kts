@@ -15,6 +15,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "miru-sdk"
 
+include(":miru-sdk")
 include(":core")
 include(":network")
 include(":ui-state")
