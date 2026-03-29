@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 /**
@@ -157,5 +160,60 @@ abstract class BaseViewModel<State, Event>(initialState: State) : ViewModel() {
 
             is Resource.Loading -> Unit
         }
+    }
+
+    /**
+     * Collects a [Flow] of [Resource] and maps each emission to a state update.
+     *
+     * This is the reactive/stream counterpart to [execute] (which handles one-shot calls).
+     * Use this when your use case returns a `Flow<Resource<T>>` (e.g. Room queries,
+     * real-time streams, paginated data).
+     *
+     * Example:
+     * ```
+     * fun observeBookmarks() = collect(
+     *     flow = { bookmarkUseCase() },
+     *     onLoading = { copy(isLoading = true) },
+     *     onSuccess = { copy(bookmarks = it, isLoading = false) },
+     *     onError = { copy(isLoading = false, error = it.message) }
+     * )
+     * ```
+     *
+     * @param T The type of data in the Resource
+     * @param flow Factory that produces the Flow to collect
+     * @param distinctUntilChanged If true, skips duplicate consecutive emissions
+     * @param onLoading Optional state reducer applied when loading starts
+     * @param onSuccess State reducer applied on each successful emission
+     * @param onError Optional state reducer applied on error
+     * @param errorEvent Optional factory to create an Event from the exception
+     * @return The launched Job
+     */
+    protected fun <T> collect(
+        flow: () -> Flow<Resource<T>>,
+        distinctUntilChanged: Boolean = false,
+        onLoading: (State.() -> State)? = null,
+        onSuccess: State.(T) -> State,
+        onError: (State.(AppException) -> State)? = null,
+        errorEvent: ((AppException) -> Event)? = null
+    ): Job = launch {
+        val source = flow().let { if (distinctUntilChanged) it.distinctUntilChanged() else it }
+
+        source
+            .onStart { onLoading?.let { setState(it) } }
+            .catch { e ->
+                val exception = if (e is AppException) e else AppException.UnknownException(e.message)
+                onError?.let { setState { it(exception) } }
+                errorEvent?.let { sendEvent(it(exception)) }
+            }
+            .collect { resource ->
+                when (resource) {
+                    is Resource.Success -> setState { onSuccess(resource.data) }
+                    is Resource.Error -> {
+                        onError?.let { setState { it(resource.exception) } }
+                        errorEvent?.let { sendEvent(it(resource.exception)) }
+                    }
+                    is Resource.Loading -> onLoading?.let { setState(it) }
+                }
+            }
     }
 }
