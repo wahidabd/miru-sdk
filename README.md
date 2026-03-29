@@ -7,6 +7,9 @@ Miru SDK provides a modular, configurable foundation for building Android and iO
 Each module follows **Clean Architecture** principles with clear separation into **data**, **domain**, and **presentation** layers, ensuring testability, maintainability, and independence between layers.
 
 [![](https://jitpack.io/v/wahidabd/miru-sdk.svg)](https://jitpack.io/#wahidabd/miru-sdk)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-00BCD4)](https://wahidabd.github.io/miru-sdk/)
+
+> **[Read the full documentation →](https://wahidabd.github.io/miru-sdk/)**
 
 ---
 
