@@ -19,6 +19,7 @@ Miru SDK provides a modular, configurable foundation for building Android and iO
 - **Dependency Injection** — Koin-powered DI with Compose integration
 - **Firebase** — Remote Config + FCM topic management with KMP support
 - **Social Auth** — Google, Apple, Facebook OAuth with pre-built sign-in buttons
+- **Persistent** — Room KMP local database + DataStore preferences with convenient wrappers
 - **Configurable** — Override themes, API configs, and inject custom modules per project
 
 ---
@@ -31,7 +32,7 @@ Miru SDK provides a modular, configurable foundation for building Android and iO
 ├─────────────┬──────────┬──────────┬──────────┬────────┬──────────┤
 │ ui-components│ ui-state │navigation│ firebase │  auth  │    di    │
 ├─────────────┴──────────┴──────────┴──────────┴────────┤          │
-│                       network                         │          │
+│                network              persistent         │          │
 ├───────────────────────────────────────────────────────┤          │
 │                        core                           │          │
 └───────────────────────────────────────────────────────┴──────────┘
@@ -47,10 +48,12 @@ graph TD
     APP --> NAV[":navigation"]
     APP --> FB[":firebase"]
     APP --> AUTH[":auth"]
+    APP --> PERSIST[":persistent"]
 
     DI --> NETWORK[":network"]
     DI --> CORE[":core"]
     AUTH --> CORE
+    PERSIST --> CORE
     FB --> CORE
     UI --> CORE
     STATE --> CORE
@@ -64,6 +67,7 @@ graph TD
     style UI fill:#2196F3,color:#fff,stroke:none,rx:8
     style STATE fill:#2196F3,color:#fff,stroke:none,rx:8
     style NAV fill:#2196F3,color:#fff,stroke:none,rx:8
+    style PERSIST fill:#795548,color:#fff,stroke:none,rx:8
     style NETWORK fill:#9C27B0,color:#fff,stroke:none,rx:8
     style CORE fill:#607D8B,color:#fff,stroke:none,rx:8
 ```
@@ -100,6 +104,7 @@ sequenceDiagram
 | **`:ui-components`** | UI library — Buttons, TextFields, Dialogs, TopBar, BottomSheet, Theming |
 | **`:firebase`** | Firebase KMP — Remote Config, FCM topic subscribe/unsubscribe, TopicManager |
 | **`:auth`** | Social Auth — Google, Apple, Facebook OAuth with pre-built Compose sign-in buttons |
+| **`:persistent`** | Local storage — Room KMP database + DataStore preferences with convenient wrappers |
 | **`:di`** | DI & init — `MiruSdkInitializer`, Koin modules, Compose injection helpers |
 
 ---
@@ -116,6 +121,8 @@ sequenceDiagram
 | Kotlinx Coroutines | 1.9.0 | Async programming |
 | Firebase KMP (GitLive) | 2.1.0 | Remote Config, FCM |
 | KMPAuth | 2.5.0-alpha01 | Google, Apple, Facebook OAuth |
+| Room KMP | 2.8.4 | Local database |
+| DataStore KMP | 1.2.1 | Preferences storage |
 | Coil | 3.0.4 | Image loading |
 | Napier | 2.7.1 | Multiplatform logging |
 | AGP | 9.0.0 | Android build |
@@ -548,6 +555,84 @@ authManager.signOut()
 
 ---
 
+### Persistent
+
+The `:persistent` module provides local storage through **Room KMP** (SQLite database) and **DataStore** (key-value preferences).
+
+**Setup** — initialize in your `Application.onCreate()` (Android):
+
+```kotlin
+MiruPreferencesInitializer.init(applicationContext)
+MiruDatabaseInitializer.init(applicationContext)
+```
+
+**DataStore Preferences** — `MiruPreferences` wraps DataStore with a convenient API:
+
+```kotlin
+val prefs: MiruPreferences = get() // via Koin
+
+// Write
+prefs.putString("user_name", "Wahid")
+prefs.putBoolean("dark_mode", true)
+prefs.putInt("login_count", 5)
+
+// Read (one-shot suspend)
+val name = prefs.getString("user_name", "Guest")
+
+// Read (reactive Flow)
+prefs.observeBoolean("dark_mode", false).collect { isDark ->
+    // react to changes
+}
+
+// Remove / Clear
+prefs.remove("user_name")
+prefs.clear()
+```
+
+**Room KMP Database** — define your database in commonMain, build with `miruBuild()`:
+
+```kotlin
+// 1. Define entities + DAO in commonMain
+@Entity
+data class UserEntity(@PrimaryKey val id: Long, val name: String)
+
+@Dao
+interface UserDao {
+    @Query("SELECT * FROM UserEntity")
+    fun getAll(): Flow<List<UserEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(user: UserEntity)
+}
+
+// 2. Define database class
+@Database(entities = [UserEntity::class], version = 1)
+@ConstructedBy(AppDatabaseConstructor::class)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun userDao(): UserDao
+}
+
+expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase>
+
+// 3. Build per platform
+// Android:
+val db = Room.databaseBuilder<AppDatabase>(context, databasePath("app.db"))
+    .miruBuild()
+
+// iOS:
+val db = Room.databaseBuilder<AppDatabase>(databasePath("app.db"))
+    .miruBuild()
+```
+
+| Component | Description |
+|---|---|
+| `MiruPreferences` | DataStore wrapper with type-safe get/put/observe for String, Int, Long, Float, Double, Boolean |
+| `MiruDatabase` | Room builder helper with pre-configured BundledSQLiteDriver + Dispatchers.IO |
+| `databasePath()` | Platform-specific database file path resolver |
+| `persistentModule` | Koin module providing MiruPreferences |
+
+---
+
 ## Project Structure
 
 ```
@@ -606,7 +691,6 @@ miru-sdk/
 │       └── com/miru/sdk/auth/
 │           ├── AuthModule.kt
 │           ├── AuthResult.kt
-│           ├── AuthException.kt
 │           ├── MiruAuthManager.kt
 │           ├── google/            # MiruGoogleAuth
 │           ├── apple/             # MiruAppleAuth
@@ -618,6 +702,15 @@ miru-sdk/
 │           ├── FirebaseModule.kt
 │           ├── config/            # MiruRemoteConfig
 │           └── messaging/         # MiruMessaging, TopicManager
+├── persistent/                    # Local storage
+│   └── src/
+│       ├── commonMain/kotlin/
+│       │   └── com/miru/sdk/persistent/
+│       │       ├── PersistentModule.kt
+│       │       ├── preferences/   # MiruPreferences, PreferencesFactory
+│       │       └── database/      # MiruDatabase, DatabasePath
+│       ├── androidMain/kotlin/    # Android DataStore + Room path
+│       └── iosMain/kotlin/        # iOS DataStore + Room path
 ├── di/                            # Dependency injection
 │   └── src/commonMain/kotlin/
 │       └── com/miru/sdk/di/
@@ -636,7 +729,7 @@ miru-sdk/
 ## Requirements
 
 - Kotlin 2.3.0+
-- Android: minSdk 24, compileSdk 35
+- Android: minSdk 24, compileSdk 36
 - iOS: iosX64, iosArm64, iosSimulatorArm64
 - Gradle 9.1+
 - JDK 21+
