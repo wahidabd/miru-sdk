@@ -4,6 +4,8 @@
 
 Miru SDK provides a modular, configurable foundation for building Android and iOS apps with shared business logic and UI components. Designed as an internal base project for software houses, it handles networking, state management, navigation, theming, and dependency injection out of the box — so your team can focus on features, not boilerplate.
 
+Each module follows **Clean Architecture** principles with clear separation into **data**, **domain**, and **presentation** layers, ensuring testability, maintainability, and independence between layers.
+
 [![](https://jitpack.io/v/wahidabd/miru-sdk.svg)](https://jitpack.io/#wahidabd/miru-sdk)
 
 ---
@@ -11,7 +13,8 @@ Miru SDK provides a modular, configurable foundation for building Android and iO
 ## Features
 
 - **Multiplatform** — Single codebase targeting Android and iOS
-- **Modular Architecture** — Pick only the modules you need
+- **Clean Architecture** — Each module follows data/domain/presentation layer separation
+- **Modular** — Pick only the modules you need
 - **Type-Safe Networking** — Ktor-based HTTP client with automatic error mapping
 - **State Management** — BaseViewModel + UiState pattern with one-time event support
 - **Navigation** — Compose Navigation wrapper with safe navigation, transitions, and result passing
@@ -26,17 +29,28 @@ Miru SDK provides a modular, configurable foundation for building Android and iO
 
 ## Architecture
 
+### Clean Architecture Per Module
+
+Each module in Miru SDK is internally structured following Clean Architecture with three layers:
+
 ```
-┌───────────────────────────────────────────────────────────────────┐
-│                            Your App                               │
-├─────────────┬──────────┬──────────┬──────────┬────────┬──────────┤
-│ ui-components│ ui-state │navigation│ firebase │  auth  │    di    │
-├─────────────┴──────────┴──────────┴──────────┴────────┤          │
-│                network              persistent         │          │
-├───────────────────────────────────────────────────────┤          │
-│                        core                           │          │
-└───────────────────────────────────────────────────────┴──────────┘
+┌──────────────────────────────────────────────┐
+│              Presentation Layer               │
+│  (UI Composables, ViewModels, UiState)        │
+│                     │                         │
+│                     ▼                         │
+│               Domain Layer                    │
+│  (Use Cases, Repository Interfaces, Models)   │
+│                     │                         │
+│                     ▼                         │
+│                Data Layer                     │
+│  (Repository Impl, API, DAO, DataSource)      │
+└──────────────────────────────────────────────┘
 ```
+
+**Domain** is the innermost layer with zero dependencies — it defines interfaces (repository contracts) and business models. **Data** implements those interfaces with concrete data sources (API, Room, DataStore). **Presentation** consumes domain use cases/repositories and exposes UI state.
+
+The dependency rule flows **inward only**: `presentation → domain ← data`. The data layer depends on domain (to implement interfaces), but domain never depends on data or presentation.
 
 ### Module Dependency Graph
 
@@ -72,20 +86,50 @@ graph TD
     style CORE fill:#607D8B,color:#fff,stroke:none,rx:8
 ```
 
-### Data Flow
+### Internal Module Layer Structure
+
+Each feature module follows this pattern internally:
+
+```
+:feature-module/
+└── src/commonMain/kotlin/
+    └── com/miru/sdk/feature/
+        ├── data/                  # Data Layer
+        │   ├── repository/        #   Repository implementations
+        │   ├── source/            #   Remote/Local data sources
+        │   ├── model/             #   DTOs, entities, API models
+        │   └── mapper/            #   Data ↔ Domain mappers
+        ├── domain/                # Domain Layer
+        │   ├── repository/        #   Repository interfaces (contracts)
+        │   ├── model/             #   Business/domain models
+        │   └── usecase/           #   Use cases (business logic)
+        └── presentation/          # Presentation Layer (if applicable)
+            ├── ui/                #   Composable screens/components
+            └── viewmodel/         #   ViewModels + UiState
+```
+
+> Not all modules have all three layers. Foundation modules like `:core` and `:network` primarily provide domain and data layer abstractions. UI-only modules like `:ui-components` are purely presentation.
+
+### Data Flow (Clean Architecture)
 
 ```mermaid
 sequenceDiagram
-    participant UI as Composable
-    participant VM as ViewModel
-    participant API as ApiService
-    participant HTTP as HttpClient
+    participant UI as Composable (Presentation)
+    participant VM as ViewModel (Presentation)
+    participant UC as UseCase (Domain)
+    participant REPO as Repository (Domain Interface)
+    participant IMPL as RepositoryImpl (Data)
+    participant API as ApiService / DAO (Data)
 
     UI->>VM: User action
-    VM->>API: get("/users")
-    API->>HTTP: Ktor request
-    HTTP-->>API: Response / Exception
-    API-->>VM: Resource<T>
+    VM->>UC: execute()
+    UC->>REPO: getUsers()
+    REPO->>IMPL: (injected impl)
+    IMPL->>API: Ktor request / Room query
+    API-->>IMPL: Response / Exception
+    IMPL-->>IMPL: Map DTO → Domain Model
+    IMPL-->>UC: Resource<DomainModel>
+    UC-->>VM: Resource<DomainModel>
     VM->>VM: setState { ... }
     VM-->>UI: StateFlow emission
     UI->>UI: Recompose
@@ -182,25 +226,78 @@ MiruSdkInitializer.initialize(
 )
 ```
 
-### 2. Create an API Service
+### 2. Define Domain Layer (models, repository interface, use case)
 
 ```kotlin
-class UserApi(httpClient: HttpClient) : ApiService(httpClient) {
+// domain/model/User.kt — pure business model
+data class User(
+    val id: Int,
+    val name: String,
+    val email: String
+)
 
-    suspend fun getUsers(): Resource<ApiResponse<List<User>>> =
-        get("users")
+// domain/repository/UserRepository.kt — contract (interface only)
+interface UserRepository {
+    suspend fun getUsers(): Resource<List<User>>
+    suspend fun getUserById(id: Int): Resource<User>
+}
 
-    suspend fun getUserById(id: Int): Resource<ApiResponse<User>> =
-        get("users/$id")
-
-    suspend fun createUser(body: CreateUserRequest): Resource<ApiResponse<User>> =
-        post("users", body = body)
+// domain/usecase/GetUsersUseCase.kt — single-responsibility business logic
+class GetUsersUseCase(private val repository: UserRepository) {
+    suspend operator fun invoke(): Resource<List<User>> = repository.getUsers()
 }
 ```
 
-### 3. Create a ViewModel
+### 3. Implement Data Layer (API, DTO, mapper, repository impl)
 
 ```kotlin
+// data/model/UserDto.kt — API response model (DTO)
+@Serializable
+data class UserDto(
+    val id: Int,
+    val name: String,
+    val email: String
+)
+
+// data/mapper/UserMapper.kt — DTO → Domain model
+class UserMapper : Mapper<UserDto, User> {
+    override fun map(from: UserDto) = User(
+        id = from.id,
+        name = from.name,
+        email = from.email
+    )
+}
+
+// data/source/UserApi.kt — remote data source
+class UserApi(httpClient: HttpClient) : ApiService(httpClient) {
+    suspend fun getUsers(): Resource<ApiResponse<List<UserDto>>> =
+        get("users")
+    suspend fun getUserById(id: Int): Resource<ApiResponse<UserDto>> =
+        get("users/$id")
+}
+
+// data/repository/UserRepositoryImpl.kt — implements domain interface
+class UserRepositoryImpl(
+    private val api: UserApi,
+    private val mapper: UserMapper
+) : UserRepository {
+
+    override suspend fun getUsers(): Resource<List<User>> =
+        api.getUsers().map { response ->
+            response.data?.map { mapper.map(it) } ?: emptyList()
+        }
+
+    override suspend fun getUserById(id: Int): Resource<User> =
+        api.getUserById(id).map { response ->
+            mapper.map(response.data!!)
+        }
+}
+```
+
+### 4. Create Presentation Layer (ViewModel + UI)
+
+```kotlin
+// presentation/viewmodel/UserListViewModel.kt
 data class UserListState(
     val users: List<User> = emptyList(),
     val isLoading: Boolean = false,
@@ -212,15 +309,15 @@ sealed interface UserListEvent {
 }
 
 class UserListViewModel(
-    private val userApi: UserApi
+    private val getUsersUseCase: GetUsersUseCase
 ) : BaseViewModel<UserListState, UserListEvent>(UserListState()) {
 
     fun loadUsers() = launch {
         setState { copy(isLoading = true, error = null) }
 
-        userApi.getUsers()
-            .onSuccess { response ->
-                setState { copy(users = response.data.orEmpty(), isLoading = false) }
+        getUsersUseCase()
+            .onSuccess { users ->
+                setState { copy(users = users, isLoading = false) }
             }
             .onError { exception, _ ->
                 setState { copy(isLoading = false, error = exception.message) }
@@ -228,16 +325,12 @@ class UserListViewModel(
             }
     }
 }
-```
 
-### 4. Build the UI
-
-```kotlin
+// presentation/ui/UserListScreen.kt
 @Composable
 fun UserListScreen(viewModel: UserListViewModel = koinViewModel()) {
     val state by viewModel.uiState.collectAsStateLifecycleAware()
 
-    // Handle one-time events
     viewModel.events.collectAsEffect { event ->
         when (event) {
             is UserListEvent.ShowError -> { /* show snackbar */ }
@@ -263,7 +356,25 @@ fun UserListScreen(viewModel: UserListViewModel = koinViewModel()) {
 }
 ```
 
-### 5. Set Up Navigation
+### 5. Wire Dependencies (Koin Module)
+
+```kotlin
+// di/UserModule.kt — bind all layers via Koin
+val userModule = module {
+    // Data
+    single { UserMapper() }
+    single { UserApi(get()) }
+    single<UserRepository> { UserRepositoryImpl(get(), get()) }
+
+    // Domain
+    factory { GetUsersUseCase(get()) }
+
+    // Presentation
+    viewModel { UserListViewModel(get()) }
+}
+```
+
+### 6. Set Up Navigation
 
 ```kotlin
 @Composable
@@ -331,7 +442,9 @@ list.updateIf({ it.id == 5 }) { it.copy(name = "Updated") }
 
 ### Network
 
-**Token management** with automatic event broadcasting:
+The network module provides **data layer** abstractions for HTTP communication.
+
+**Domain layer** — `TokenProvider` interface (repository contract for auth tokens):
 
 ```kotlin
 class MyTokenProvider : TokenProvider {
@@ -341,8 +454,20 @@ class MyTokenProvider : TokenProvider {
     override suspend fun clearTokens() { /* clear */ }
     override suspend fun isLoggedIn(): Boolean = getAccessToken() != null
 }
+```
 
-// Listen for token events globally
+**Data layer** — `ApiService` as base remote data source, `safeApiCall` for error mapping:
+
+```kotlin
+// Your API extends ApiService (data/source layer)
+class ProductApi(httpClient: HttpClient) : ApiService(httpClient) {
+    suspend fun getProducts(): Resource<ApiResponse<List<ProductDto>>> = get("products")
+}
+```
+
+**Token events** — observe globally for auth state changes:
+
+```kotlin
 TokenEventBus.events.collect { event ->
     when (event) {
         TokenEvent.ForceLogout -> navigateToLogin()
@@ -354,21 +479,20 @@ TokenEventBus.events.collect { event ->
 
 ### UI State
 
-**BaseViewModel** with built-in patterns:
+The ui-state module provides **presentation layer** base classes.
+
+**BaseViewModel** — your ViewModels consume domain use cases, not data sources directly:
 
 ```kotlin
 class ProductViewModel(
-    private val api: ProductApi
+    private val getProductsUseCase: GetProductsUseCase  // domain layer
 ) : BaseViewModel<ProductState, ProductEvent>(ProductState()) {
 
-    // Automatic Resource collection
-    fun loadProducts() {
-        api.getProducts().asFlow()
-            .collectResource(
-                onLoading = { setState { copy(isLoading = true) } },
-                onSuccess = { data -> setState { copy(products = data, isLoading = false) } },
-                onError = { e -> setState { copy(error = e.message, isLoading = false) } }
-            )
+    fun loadProducts() = launch {
+        getProductsUseCase()
+            .onLoading { setState { copy(isLoading = true) } }
+            .onSuccess { data -> setState { copy(products = data, isLoading = false) } }
+            .onError { e -> setState { copy(error = e.message, isLoading = false) } }
     }
 }
 ```
@@ -377,7 +501,7 @@ class ProductViewModel(
 
 ```kotlin
 data class FeedState(
-    val paging: PagingState<Post> = PagingState()
+    val paging: PagingState<Post> = PagingState()  // Post = domain model
 )
 
 // Append new page
@@ -635,94 +759,132 @@ val db = Room.databaseBuilder<AppDatabase>(databasePath("app.db"))
 
 ## Project Structure
 
+Each module follows the clean architecture layer convention where applicable. The layers are annotated with `[domain]`, `[data]`, and `[presentation]` labels.
+
 ```
 miru-sdk/
-├── core/                          # Base utilities
+├── core/                              # Foundation (shared domain + data abstractions)
 │   └── src/commonMain/kotlin/
 │       └── com/miru/sdk/core/
-│           ├── AppException.kt
-│           ├── Resource.kt
-│           ├── dispatcher/
-│           ├── ext/               # String, Flow, Collection, DateTime extensions
-│           ├── logger/
-│           └── mapper/
-├── network/                       # HTTP layer
+│           ├── AppException.kt        # [domain] Sealed exception hierarchy
+│           ├── Resource.kt            # [domain] Async result wrapper
+│           ├── dispatcher/            # [domain] DispatcherProvider (expect/actual)
+│           ├── ext/                   # [domain] String, Flow, Collection, DateTime extensions
+│           ├── logger/                # [data]   Napier-based logging
+│           └── mapper/                # [data]   Mapper<From, To> interface
+│
+├── network/                           # HTTP client (data layer module)
 │   └── src/commonMain/kotlin/
 │       └── com/miru/sdk/network/
-│           ├── ApiService.kt
-│           ├── SafeApiCall.kt
-│           ├── client/            # HttpClientFactory, HttpEngineFactory
-│           ├── config/            # NetworkConfig
-│           ├── model/             # ApiResponse, ErrorResponse
-│           └── token/             # TokenProvider, TokenEvent
-├── ui-state/                      # State management
+│           ├── domain/
+│           │   └── token/             # [domain] TokenProvider interface, TokenEvent
+│           ├── data/
+│           │   ├── ApiService.kt      # [data]   Base HTTP methods (remote data source)
+│           │   ├── SafeApiCall.kt     # [data]   Exception → AppException mapper
+│           │   ├── client/            # [data]   HttpClientFactory, HttpEngineFactory
+│           │   ├── config/            # [data]   NetworkConfig
+│           │   └── model/             # [data]   ApiResponse, ErrorResponse (DTOs)
+│
+├── ui-state/                          # State management (presentation layer module)
 │   └── src/commonMain/kotlin/
 │       └── com/miru/sdk/ui/state/
-│           ├── BaseViewModel.kt
-│           ├── UiState.kt
-│           ├── UiEvent.kt
-│           ├── EventFlow.kt
-│           ├── PagingState.kt
-│           └── StateExtensions.kt
-├── navigation/                    # Navigation
+│           ├── BaseViewModel.kt       # [presentation] MVVM base with state + events
+│           ├── UiState.kt             # [presentation] Sealed interface
+│           ├── UiEvent.kt             # [presentation] One-time events
+│           ├── EventFlow.kt           # [presentation] Channel-backed event flow
+│           ├── PagingState.kt         # [presentation] Pagination state
+│           └── StateExtensions.kt     # [presentation] toUiState(), collectAsEffect()
+│
+├── navigation/                        # Navigation (presentation layer module)
 │   └── src/commonMain/kotlin/
 │       └── com/miru/sdk/navigation/
-│           ├── MiruNavHost.kt
-│           ├── NavigationManager.kt
-│           ├── NavigationExt.kt
-│           ├── result/
-│           └── transition/
-├── ui-components/                 # Composables
+│           ├── MiruNavHost.kt         # [presentation] Compose NavHost wrapper
+│           ├── NavigationManager.kt   # [domain] Interface + Impl
+│           ├── NavigationExt.kt       # [presentation] Navigation extensions
+│           ├── result/                # [domain] NavigationResult
+│           └── transition/            # [presentation] Transition animations
+│
+├── ui-components/                     # UI library (presentation layer module)
 │   └── src/commonMain/kotlin/
 │       └── com/miru/sdk/ui/components/
-│           ├── theme/             # MiruTheme, colors, typography
-│           ├── button/
-│           ├── textfield/
-│           ├── topbar/
-│           ├── bottomsheet/
-│           ├── card/
-│           ├── dialog/
-│           ├── error/
-│           ├── image/
-│           ├── loading/
-│           └── spacer/
-├── auth/                          # Social Auth (OAuth)
+│           ├── theme/                 # [presentation] MiruTheme, colors, typography
+│           ├── button/                # [presentation] MiruButton
+│           ├── textfield/             # [presentation] MiruTextField
+│           ├── topbar/                # [presentation] MiruTopBar
+│           ├── bottomsheet/           # [presentation] MiruBottomSheet
+│           ├── card/                  # [presentation] MiruCard
+│           ├── dialog/                # [presentation] MiruDialog
+│           ├── error/                 # [presentation] MiruErrorView
+│           ├── image/                 # [presentation] MiruImage
+│           ├── loading/               # [presentation] MiruLoadingIndicator
+│           └── spacer/                # [presentation] MiruSpacer
+│
+├── auth/                              # Social Auth (all 3 layers)
 │   └── src/commonMain/kotlin/
 │       └── com/miru/sdk/auth/
-│           ├── AuthModule.kt
-│           ├── AuthResult.kt
-│           ├── MiruAuthManager.kt
-│           ├── google/            # MiruGoogleAuth
-│           ├── apple/             # MiruAppleAuth
-│           ├── facebook/          # MiruFacebookAuth
-│           └── ui/                # Pre-built sign-in buttons
-├── firebase/                      # Firebase KMP
+│           ├── domain/
+│           │   ├── AuthResult.kt      # [domain] Business model + AuthProvider enum
+│           │   └── MiruAuthManager.kt # [domain] Auth state manager interface
+│           ├── data/
+│           │   ├── AuthModule.kt      # [data]   Koin module
+│           │   ├── google/            # [data]   MiruGoogleAuth (KMPAuth)
+│           │   ├── apple/             # [data]   MiruAppleAuth (expect/actual)
+│           │   └── facebook/          # [data]   MiruFacebookAuth (expect/actual)
+│           └── presentation/
+│               └── ui/                # [presentation] MiruGoogleSignInButton
+│
+├── firebase/                          # Firebase KMP (domain + data layers)
 │   └── src/commonMain/kotlin/
 │       └── com/miru/sdk/firebase/
-│           ├── FirebaseModule.kt
-│           ├── config/            # MiruRemoteConfig
-│           └── messaging/         # MiruMessaging, TopicManager
-├── persistent/                    # Local storage
+│           ├── domain/
+│           │   ├── config/            # [domain] RemoteConfig interface
+│           │   └── messaging/         # [domain] Messaging interface
+│           ├── data/
+│           │   ├── FirebaseModule.kt  # [data]   Koin module
+│           │   ├── config/            # [data]   MiruRemoteConfig impl
+│           │   └── messaging/         # [data]   MiruMessaging, TopicManager impl
+│
+├── persistent/                        # Local storage (domain + data layers)
 │   └── src/
 │       ├── commonMain/kotlin/
 │       │   └── com/miru/sdk/persistent/
-│       │       ├── PersistentModule.kt
-│       │       ├── preferences/   # MiruPreferences, PreferencesFactory
-│       │       └── database/      # MiruDatabase, DatabasePath
-│       ├── androidMain/kotlin/    # Android DataStore + Room path
-│       └── iosMain/kotlin/        # iOS DataStore + Room path
-├── di/                            # Dependency injection
+│       │       ├── domain/
+│       │       │   ├── preferences/   # [domain] Preferences interface
+│       │       │   └── database/      # [domain] Database builder interface
+│       │       ├── data/
+│       │       │   ├── PersistentModule.kt  # [data] Koin module
+│       │       │   ├── preferences/   # [data]   MiruPreferences impl, PreferencesFactory
+│       │       │   └── database/      # [data]   MiruDatabase impl, DatabasePath
+│       ├── androidMain/kotlin/        # [data]   Android DataStore + Room path
+│       └── iosMain/kotlin/            # [data]   iOS DataStore + Room path
+│
+├── di/                                # Dependency injection (wiring all layers)
 │   └── src/commonMain/kotlin/
 │       └── com/miru/sdk/di/
-│           ├── MiruSdkInitializer.kt
-│           ├── KoinExt.kt
-│           └── modules/
+│           ├── MiruSdkInitializer.kt  # SDK entry point
+│           ├── KoinExt.kt             # Compose injection helpers
+│           └── modules/               # CoreModule, NetworkModule, PlatformModule
+│
 ├── gradle/
-│   └── libs.versions.toml        # Version catalog
+│   └── libs.versions.toml            # Version catalog
 ├── build.gradle.kts
 ├── settings.gradle.kts
 └── jitpack.yml
 ```
+
+### Layer Mapping Summary
+
+| Module | Domain | Data | Presentation |
+|---|---|---|---|
+| `:core` | Resource, AppException, Mapper, Extensions | Logger, DispatcherProvider | — |
+| `:network` | TokenProvider, TokenEvent | ApiService, SafeApiCall, HttpClient, DTOs | — |
+| `:ui-state` | — | — | BaseViewModel, UiState, EventFlow, PagingState |
+| `:navigation` | NavigationManager, NavigationResult | — | MiruNavHost, Transitions |
+| `:ui-components` | — | — | Theme, Buttons, Cards, Dialogs, etc. |
+| `:auth` | AuthResult, MiruAuthManager | Google/Apple/Facebook Auth impls | Sign-in buttons |
+| `:firebase` | RemoteConfig/Messaging interfaces | Firebase impl, TopicManager | — |
+| `:persistent` | Preferences/Database interfaces | Room, DataStore, platform paths | — |
+| `:di` | — | Koin module wiring | — |
 
 ---
 
