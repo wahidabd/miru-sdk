@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
@@ -214,6 +215,45 @@ abstract class BaseViewModel<State, Event>(initialState: State) : ViewModel() {
                     }
                     is Resource.Loading -> onLoading?.let { setState(it) }
                 }
+            }
+    }
+
+    /**
+     * Collects a [Flow] of [Resource] directly into a [MutableStateFlow].
+     *
+     * The simplest way to handle reactive streams — no reducers needed.
+     * Automatically emits [Resource.Loading] on start, catches exceptions,
+     * and pipes every emission straight to the target StateFlow.
+     *
+     * Example:
+     * ```
+     * private val _articles = MutableStateFlow<Resource<List<Article>>>(Resource.Loading())
+     * val articles = _articles.asStateFlow()
+     *
+     * fun loadArticles() = collectResource(_articles) { useCase.getArticles() }
+     * ```
+     *
+     * @param T The type of data in the Resource
+     * @param stateFlow The target StateFlow to update
+     * @param distinctUntilChanged If true, skips duplicate consecutive emissions
+     * @param flow Factory that produces the Flow to collect
+     * @return The launched Job
+     */
+    protected fun <T> collectResource(
+        stateFlow: MutableStateFlow<Resource<T>>,
+        distinctUntilChanged: Boolean = false,
+        flow: suspend () -> Flow<Resource<T>>
+    ): Job = launch {
+        val source = flow().let { if (distinctUntilChanged) it.distinctUntilChanged() else it }
+
+        source
+            .onStart { stateFlow.update { Resource.Loading() } }
+            .catch { e ->
+                val exception = if (e is AppException) e else AppException.UnknownException(e.message)
+                stateFlow.update { Resource.Error(exception) }
+            }
+            .collect { resource ->
+                stateFlow.update { resource }
             }
     }
 }
