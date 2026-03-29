@@ -865,6 +865,14 @@ miru-sdk/
 │           ├── KoinExt.kt             # Compose injection helpers
 │           └── modules/               # CoreModule, NetworkModule, PlatformModule
 │
+├── sample/                            # Sample News Reader app (Android + iOS)
+│   ├── src/
+│   │   ├── commonMain/kotlin/         # Shared UI, ViewModels, data layer
+│   │   ├── androidMain/kotlin/        # Android-specific (Ktor OkHttp)
+│   │   └── iosMain/kotlin/            # iOS entry point, SDK initializer
+│   ├── app/                           # Android app module (Activity, BuildConfig)
+│   └── iosApp/                        # Xcode project for iOS
+│
 ├── gradle/
 │   └── libs.versions.toml            # Version catalog
 ├── build.gradle.kts
@@ -885,6 +893,33 @@ miru-sdk/
 | `:firebase` | RemoteConfig/Messaging interfaces | Firebase impl, TopicManager | — |
 | `:persistent` | Preferences/Database interfaces | Room, DataStore, platform paths | — |
 | `:di` | — | Koin module wiring | — |
+
+---
+
+## Sample App
+
+The `:sample` module is a fully functional **News Reader** app built with Miru SDK, demonstrating clean architecture, real API integration, and multiplatform support (Android + iOS).
+
+### Features
+
+The sample app uses [NewsAPI.org](https://newsapi.org) to fetch real headlines and articles, with BottomNavigation containing four tabs: Home (browse by category), Search (full-text search), Bookmarks (local Room database), and Settings (dark mode toggle, font size adjustment). Article detail screens are accessible from any tab.
+
+### Running the Sample
+
+**Android** — open in Android Studio and run the `:sample:app` module. The API key is read from `sample/env.properties`:
+
+```properties
+# sample/env.properties (git-ignored)
+NEWS_API_KEY=your_api_key_here
+```
+
+Copy `sample/env.properties.example` and fill in your key from [newsapi.org](https://newsapi.org).
+
+**iOS** — open `sample/iosApp/iosApp.xcodeproj` in Xcode. The API key is configured in `sample/iosApp/Config.xcconfig`. Build and run on a simulator or device — the Kotlin framework compiles automatically via a Gradle build phase.
+
+### Architecture
+
+The sample follows the same layered architecture as the SDK: DTOs and API client in the data layer, mappers converting to domain models, a repository with in-memory caching, and ViewModels exposing `UiState` flows consumed by Compose screens. Koin provides dependency injection across both platforms.
 
 ---
 

@@ -5,9 +5,11 @@ import com.miru.sdk.di.MiruSdkConfig
 import com.miru.sdk.di.MiruSdkInitializer
 import com.miru.sdk.network.config.NetworkConfig
 import com.miru.sdk.persistent.database.MiruDatabaseInitializer
+import com.miru.sdk.persistent.persistentModule
 import com.miru.sdk.persistent.preferences.MiruPreferencesInitializer
+import com.miru.sdk.sample.app.BuildConfig
 import com.miru.sdk.sample.di.SampleDatabaseInitializer
-import com.miru.sdk.sample.di.sampleModule
+import com.miru.sdk.sample.di.createSampleModule
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 
@@ -28,15 +30,21 @@ class SampleApplication : Application() {
         MiruDatabaseInitializer.init(this)
         SampleDatabaseInitializer.init(this)
 
-        // Initialize Miru SDK with network config + sample module
+        // Read API key from BuildConfig (sourced from env.properties)
+        val newsApiKey = BuildConfig.NEWS_API_KEY
+
+        // Initialize Miru SDK with NewsAPI.org base URL
         MiruSdkInitializer.initialize(
             MiruSdkConfig(
                 networkConfig = NetworkConfig(
-                    baseUrl = "https://api.example.com/v1/",
+                    baseUrl = "https://newsapi.org/v2/",
                     enableLogging = true
                 ),
                 enableLogging = true,
-                additionalModules = listOf(sampleModule)
+                additionalModules = listOf(
+                    persistentModule,
+                    createSampleModule(newsApiKey)
+                )
             )
         )
     }

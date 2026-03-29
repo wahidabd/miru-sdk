@@ -14,14 +14,14 @@ serialization = "1.7.3"
 ktor = "3.4.1"
 
 # Koin
-koin = "4.0.3"
-koin-compose = "4.0.3"
+koin = "4.1.0"
+koin-compose = "4.1.0"
 
 # Lifecycle
-lifecycle = "2.8.4"
+lifecycle = "2.10.0-beta01"
 
 # Navigation
-navigation = "2.8.0-alpha10"
+navigation = "2.9.0-alpha14"
 
 # DateTime
 datetime = "0.6.1"

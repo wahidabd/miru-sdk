@@ -2,6 +2,7 @@
 .gradle
 .kotlin
 /local.properties
+env.properties
 /.idea
 .DS_Store
 /build
@@ -15,3 +16,4 @@
 !*.xcodeproj/xcshareddata/xcschemes/
 *.xcworkspace/*
 !*.xcworkspace/contents.xcworkspacedata
+xcuserdata/

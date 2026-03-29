@@ -4,22 +4,38 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Data Transfer Object for article API responses.
- * Maps to the remote API JSON structure.
+ * Top-level response wrapper from the NewsAPI.org API.
+ *
+ * Example response:
+ * ```json
+ * {
+ *   "status": "ok",
+ *   "totalResults": 123,
+ *   "articles": [...]
+ * }
+ * ```
+ */
+@Serializable
+data class NewsApiResponse(
+    val status: String = "",
+    val totalResults: Int = 0,
+    val articles: List<ArticleDto> = emptyList()
+)
+
+/**
+ * Data Transfer Object for a single article from NewsAPI.org.
  */
 @Serializable
 data class ArticleDto(
-    val id: Long = 0,
-    val title: String = "",
-    val description: String? = null,
-    val content: String? = null,
-    val author: String? = null,
     val source: SourceDto? = null,
-    @SerialName("urlToImage")
-    val imageUrl: String? = null,
+    val author: String? = null,
+    val title: String? = null,
+    val description: String? = null,
     val url: String = "",
-    @SerialName("publishedAt")
-    val publishedAt: String = ""
+    @SerialName("urlToImage")
+    val urlToImage: String? = null,
+    val publishedAt: String = "",
+    val content: String? = null
 )
 
 @Serializable

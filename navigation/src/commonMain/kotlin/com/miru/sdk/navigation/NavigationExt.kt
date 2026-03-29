@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
+import androidx.savedstate.read
 
 /**
  * Safely navigate to a destination, preventing duplicate navigation attempts.
@@ -35,13 +36,16 @@ fun NavController.currentRoute(): String? {
  * Get a typed argument from the NavBackStackEntry.
  * Provides type-safe retrieval of navigation arguments.
  *
+ * Note: Navigation 2.9+ uses SavedState instead of Bundle.
+ * This function reads from the SavedState using the read {} block.
+ *
  * @param T The type of the argument
  * @param key The argument key
  * @return The argument value, or null if not found or of incorrect type
  */
 @Composable
 inline fun <reified T> NavBackStackEntry.getArgument(key: String): T? {
-    return arguments?.getString(key) as? T
+    return arguments?.read { getString(key) } as? T
 }
 
 /**
@@ -51,7 +55,7 @@ inline fun <reified T> NavBackStackEntry.getArgument(key: String): T? {
  * @return The string argument value, or null if not found
  */
 fun NavBackStackEntry.getStringArgument(key: String): String? {
-    return arguments?.getString(key)
+    return arguments?.read { getString(key) }
 }
 
 /**
@@ -61,7 +65,7 @@ fun NavBackStackEntry.getStringArgument(key: String): String? {
  * @return The int argument value, or 0 if not found
  */
 fun NavBackStackEntry.getIntArgument(key: String): Int {
-    return arguments?.getInt(key) ?: 0
+    return arguments?.read { getInt(key) } ?: 0
 }
 
 /**
@@ -71,7 +75,7 @@ fun NavBackStackEntry.getIntArgument(key: String): Int {
  * @return The long argument value, or 0L if not found
  */
 fun NavBackStackEntry.getLongArgument(key: String): Long {
-    return arguments?.getLong(key) ?: 0L
+    return arguments?.read { getLong(key) } ?: 0L
 }
 
 /**
@@ -81,7 +85,7 @@ fun NavBackStackEntry.getLongArgument(key: String): Long {
  * @return The boolean argument value, or false if not found
  */
 fun NavBackStackEntry.getBooleanArgument(key: String): Boolean {
-    return arguments?.getBoolean(key) ?: false
+    return arguments?.read { getBoolean(key) } ?: false
 }
 
 /**

@@ -22,6 +22,7 @@ import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /**
@@ -31,8 +32,11 @@ import org.koin.dsl.module
  * - Data: mappers, data sources, repository implementations
  * - Domain: use cases
  * - Presentation: ViewModels
+ *
+ * Requires a String qualifier named "newsApiKey" to be provided
+ * (see [createSampleModule]).
  */
-val sampleModule = module {
+fun createSampleModule(newsApiKey: String) = module {
 
     // ── Data Layer ──────────────────────────────────────────
 
@@ -43,8 +47,8 @@ val sampleModule = module {
     singleOf(::ArticleDtoMapper)
     singleOf(::BookmarkMapper)
 
-    // Remote data source
-    single { ArticleApi(get()) }
+    // Remote data source (requires HttpClient from :network module + API key)
+    single { ArticleApi(httpClient = get(), apiKey = newsApiKey) }
 
     // Local data source (DAO from Room database)
     single { get<SampleDatabase>().bookmarkDao() }

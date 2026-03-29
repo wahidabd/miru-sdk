@@ -16,9 +16,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.Bookmarks
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -47,9 +44,6 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun HomeScreen(
     onNavigateToDetail: (Long) -> Unit,
-    onNavigateToSearch: () -> Unit,
-    onNavigateToBookmarks: () -> Unit,
-    onNavigateToSettings: () -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -71,17 +65,6 @@ fun HomeScreen(
                         fontWeight = FontWeight.Bold,
                         color = MiruTheme.colors.onBackground
                     )
-                },
-                actions = {
-                    IconButton(onClick = onNavigateToSearch) {
-                        Icon(Icons.Default.Search, contentDescription = "Search")
-                    }
-                    IconButton(onClick = onNavigateToBookmarks) {
-                        Icon(Icons.Default.Bookmarks, contentDescription = "Bookmarks")
-                    }
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
                 }
             )
         }

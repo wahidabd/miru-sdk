@@ -1,0 +1,6 @@
+// API Key configuration for Miru News sample.
+// Copy this file and set your NewsAPI key:
+//   NEWS_API_KEY = your_api_key_here
+//
+// Or pass via Xcode scheme environment variable.
+NEWS_API_KEY = 5b451eae6c2e4deebf2840f83664a528

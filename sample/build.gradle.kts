@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
@@ -9,11 +9,22 @@ plugins {
 }
 
 kotlin {
-    androidTarget()
+    androidLibrary {
+        namespace = "com.miru.sdk.sample"
+        compileSdk = 36
+        minSdk = 24
+    }
 
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "Sample"
+            isStatic = true
+        }
+    }
 
     applyDefaultHierarchyTemplate()
 
@@ -81,30 +92,16 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.kotlinx.coroutines.android)
-            implementation(libs.androidx.activity.compose)
+        }
+
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
         }
-    }
-}
-
-android {
-    namespace = "com.miru.sdk.sample"
-    compileSdk = 36
-
-    defaultConfig {
-        applicationId = "com.miru.sdk.sample"
-        minSdk = 24
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
-    }
-
-    buildFeatures {
-        compose = true
     }
 }
 
