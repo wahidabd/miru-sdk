@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.jvm.JvmName
 
 /**
  * Base ViewModel class providing state and event management for UI layers.
@@ -202,7 +203,7 @@ abstract class BaseViewModel<State, Event>(initialState: State) : ViewModel() {
         source
             .onStart { onLoading?.let { setState(it) } }
             .catch { e ->
-                val exception = if (e is AppException) e else AppException.UnknownException(e.message)
+                val exception = if (e is AppException) e else AppException.UnknownException(e)
                 onError?.let { setState { it(exception) } }
                 errorEvent?.let { sendEvent(it(exception)) }
             }
@@ -219,18 +220,46 @@ abstract class BaseViewModel<State, Event>(initialState: State) : ViewModel() {
     }
 
     /**
-     * Collects a [Flow] of [Resource] directly into a [MutableStateFlow].
+     * Executes a one-shot suspend call and pipes the [Resource] result into a [MutableStateFlow].
      *
-     * The simplest way to handle reactive streams — no reducers needed.
-     * Automatically emits [Resource.Loading] on start, catches exceptions,
-     * and pipes every emission straight to the target StateFlow.
+     * The simplest helper — for use cases that return `suspend () -> Resource<T>`.
+     * No Flow, no reducers. Just point to a StateFlow and call your use case.
      *
      * Example:
      * ```
      * private val _articles = MutableStateFlow<Resource<List<Article>>>(Resource.Loading())
      * val articles = _articles.asStateFlow()
      *
-     * fun loadArticles() = collectResource(_articles) { useCase.getArticles() }
+     * fun load() = collectResource(_articles) { getArticlesUseCase(category) }
+     * ```
+     *
+     * @param T The type of data in the Resource
+     * @param stateFlow The target StateFlow to update
+     * @param call The suspend function that returns a [Resource]
+     * @return The launched Job
+     */
+    protected fun <T> collectResource(
+        stateFlow: MutableStateFlow<Resource<T>>,
+        call: suspend () -> Resource<T>
+    ): Job = launch {
+        stateFlow.update { Resource.Loading() }
+        try {
+            stateFlow.update { call() }
+        } catch (e: Exception) {
+            val exception = if (e is AppException) e else AppException.UnknownException(e)
+            stateFlow.update { Resource.Error(exception) }
+        }
+    }
+
+    /**
+     * Collects a [Flow] of [Resource] directly into a [MutableStateFlow].
+     *
+     * For reactive streams that already emit [Resource] (e.g. custom flows with
+     * loading/success/error). Automatically emits [Resource.Loading] on start.
+     *
+     * Example:
+     * ```
+     * fun observe() = collectFlowResource(_data) { useCase.observeWithStatus() }
      * ```
      *
      * @param T The type of data in the Resource
@@ -239,7 +268,7 @@ abstract class BaseViewModel<State, Event>(initialState: State) : ViewModel() {
      * @param flow Factory that produces the Flow to collect
      * @return The launched Job
      */
-    protected fun <T> collectResource(
+    protected fun <T> collectFlowResource(
         stateFlow: MutableStateFlow<Resource<T>>,
         distinctUntilChanged: Boolean = false,
         flow: suspend () -> Flow<Resource<T>>
@@ -249,11 +278,49 @@ abstract class BaseViewModel<State, Event>(initialState: State) : ViewModel() {
         source
             .onStart { stateFlow.update { Resource.Loading() } }
             .catch { e ->
-                val exception = if (e is AppException) e else AppException.UnknownException(e.message)
+                val exception = if (e is AppException) e else AppException.UnknownException(e)
                 stateFlow.update { Resource.Error(exception) }
             }
             .collect { resource ->
                 stateFlow.update { resource }
+            }
+    }
+
+    /**
+     * Collects a plain [Flow] directly into a [MutableStateFlow] of [Resource].
+     *
+     * For reactive streams (Room, DataStore) that return `Flow<T>`.
+     * Each emission is automatically wrapped in [Resource.Success].
+     *
+     * Example:
+     * ```
+     * private val _bookmarks = MutableStateFlow<Resource<List<Article>>>(Resource.Loading())
+     * val bookmarks = _bookmarks.asStateFlow()
+     *
+     * fun observe() = collectFlow(_bookmarks) { bookmarkUseCase() }
+     * ```
+     *
+     * @param T The type of data
+     * @param stateFlow The target StateFlow to update
+     * @param distinctUntilChanged If true, skips duplicate consecutive emissions
+     * @param flow Factory that produces the plain Flow
+     * @return The launched Job
+     */
+    protected fun <T> collectFlow(
+        stateFlow: MutableStateFlow<Resource<T>>,
+        distinctUntilChanged: Boolean = false,
+        flow: suspend () -> Flow<T>
+    ): Job = launch {
+        val source = flow().let { if (distinctUntilChanged) it.distinctUntilChanged() else it }
+
+        source
+            .onStart { stateFlow.update { Resource.Loading() } }
+            .catch { e ->
+                val exception = if (e is AppException) e else AppException.UnknownException(e)
+                stateFlow.update { Resource.Error(exception) }
+            }
+            .collect { data ->
+                stateFlow.update { Resource.Success(data) }
             }
     }
 }

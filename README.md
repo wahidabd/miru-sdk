@@ -493,9 +493,9 @@ TokenEventBus.events.collect { event ->
 
 The ui-state module provides **presentation layer** base classes.
 
-**BaseViewModel** provides three helpers for handling async operations, from simplest to most flexible:
+**BaseViewModel** provides five helpers for handling async operations, from simplest to most flexible:
 
-**`collectResource()`** — zero boilerplate, pipes a `Flow<Resource<T>>` straight into a `MutableStateFlow`:
+**`collectResource()`** — zero boilerplate, pipes a one-shot `suspend → Resource<T>` straight into a `MutableStateFlow`:
 
 ```kotlin
 class SpotlightViewModel(
@@ -506,6 +506,38 @@ class SpotlightViewModel(
     val spotlight = _spotlight.asStateFlow()
 
     fun load() = collectResource(_spotlight) { useCase.spotlight() }
+}
+```
+
+**`collectFlow()`** — plain `Flow<T>` auto-wrapped into `Resource`, piped to a `MutableStateFlow`:
+
+```kotlin
+class NotificationViewModel(
+    private val observeNotifications: ObserveNotificationsUseCase
+) : BaseViewModel<Unit, NotificationEvent>(Unit) {
+
+    private val _notifications = MutableStateFlow<Resource<List<Notification>>>(Resource.Loading())
+    val notifications = _notifications.asStateFlow()
+
+    fun observe() = collectFlow(_notifications, distinctUntilChanged = true) {
+        observeNotifications() // returns Flow<List<Notification>>
+    }
+}
+```
+
+**`collectFlowResource()`** — `Flow<Resource<T>>` piped directly to a `MutableStateFlow`:
+
+```kotlin
+class LiveFeedViewModel(
+    private val observeLiveFeed: ObserveLiveFeedUseCase
+) : BaseViewModel<Unit, LiveFeedEvent>(Unit) {
+
+    private val _feed = MutableStateFlow<Resource<List<FeedItem>>>(Resource.Loading())
+    val feed = _feed.asStateFlow()
+
+    fun observe() = collectFlowResource(_feed) {
+        observeLiveFeed() // returns Flow<Resource<List<FeedItem>>>
+    }
 }
 ```
 
@@ -586,7 +618,42 @@ MiruBottomSheet     MiruCard            MiruInfoCard
 MiruAlertDialog     MiruLoadingDialog   MiruConfirmationDialog
 MiruErrorView       MiruEmptyView       MiruFullScreenLoading
 MiruLoadingIndicator MiruShimmerEffect  MiruNetworkImage
-MiruSpacer          MiruVerticalSpacer  MiruHorizontalSpacer
+MiruResourceView    MiruSpacer          MiruVerticalSpacer
+MiruHorizontalSpacer
+```
+
+**MiruResourceView** — eliminates repetitive `when (resource)` boilerplate in screens. Works with any `StateFlow<Resource<T>>` regardless of which helper populated it (`collectResource`, `collectFlow`, `collectFlowResource`, `execute`, or `collect`):
+
+```kotlin
+@Composable
+fun SpotlightScreen(viewModel: SpotlightViewModel = koinViewModel()) {
+    val spotlightResource by viewModel.spotlight.collectAsStateWithLifecycle()
+
+    MiruResourceView(
+        resource = spotlightResource,
+        loadingMessage = "Loading spotlight...",
+        onRetry = { viewModel.load() }
+    ) { items ->
+        LazyColumn {
+            items(items, key = { it.id }) { item ->
+                SpotlightCard(item)
+            }
+        }
+    }
+}
+```
+
+You can also customize the loading and error states:
+
+```kotlin
+MiruResourceView(
+    resource = feedResource,
+    onRetry = { viewModel.refresh() },
+    onLoading = { MyCustomShimmer() },
+    onError = { message -> MyCustomErrorBanner(message) }
+) { data ->
+    FeedContent(data)
+}
 ```
 
 ### Firebase

@@ -28,6 +28,11 @@ kotlin {
 
     applyDefaultHierarchyTemplate()
 
+    // Suppress expect/actual classes Beta warning (Room KSP generates expect/actual)
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     sourceSets {
         commonMain.dependencies {
             // Single umbrella SDK dependency — re-exports all sub-modules + Compose

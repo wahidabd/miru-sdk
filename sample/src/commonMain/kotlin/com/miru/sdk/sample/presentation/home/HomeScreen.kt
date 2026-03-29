@@ -34,8 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.miru.sdk.sample.domain.model.Article
 import com.miru.sdk.sample.domain.model.ArticleCategory
 import com.miru.sdk.ui.components.card.MiruCard
-import com.miru.sdk.ui.components.error.MiruErrorView
-import com.miru.sdk.ui.components.loading.MiruFullScreenLoading
+import com.miru.sdk.ui.components.resource.MiruResourceView
 import com.miru.sdk.ui.components.theme.MiruTheme
 import com.miru.sdk.ui.state.collectAsEffect
 import org.koin.compose.viewmodel.koinViewModel
@@ -47,6 +46,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val articlesResource by viewModel.articles.collectAsStateWithLifecycle()
 
     viewModel.events.collectAsEffect { event ->
         when (event) {
@@ -77,30 +77,22 @@ fun HomeScreen(
                 onSelect = viewModel::selectCategory
             )
 
-            // Article list
-            when {
-                state.isLoading -> {
-                    MiruFullScreenLoading(message = "Loading articles...")
-                }
-                state.error != null -> {
-                    MiruErrorView(
-                        message = state.error ?: "Something went wrong",
-                        onRetry = { viewModel.loadArticles() },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                else -> {
-                    LazyColumn(
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(state.articles, key = { it.id }) { article ->
-                            ArticleCard(
-                                article = article,
-                                onClick = { viewModel.onArticleClick(article.id) },
-                                onBookmarkClick = { viewModel.toggleBookmark(article) }
-                            )
-                        }
+            // Article list — driven by collectResource() StateFlow
+            MiruResourceView(
+                resource = articlesResource,
+                loadingMessage = "Loading articles...",
+                onRetry = { viewModel.loadArticles() }
+            ) { articles ->
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(articles, key = { it.id }) { article ->
+                        ArticleCard(
+                            article = article,
+                            onClick = { viewModel.onArticleClick(article.id) },
+                            onBookmarkClick = { viewModel.toggleBookmark(article) }
+                        )
                     }
                 }
             }
