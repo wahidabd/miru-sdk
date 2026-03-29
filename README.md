@@ -18,6 +18,7 @@ Miru SDK provides a modular, configurable foundation for building Android and iO
 - **UI Components** — Ready-to-use Material 3 composables with full theming
 - **Dependency Injection** — Koin-powered DI with Compose integration
 - **Firebase** — Remote Config + FCM topic management with KMP support
+- **Social Auth** — Google, Apple, Facebook OAuth with pre-built sign-in buttons
 - **Configurable** — Override themes, API configs, and inject custom modules per project
 
 ---
@@ -25,15 +26,15 @@ Miru SDK provides a modular, configurable foundation for building Android and iO
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│                        Your App                          │
-├─────────────┬──────────┬──────────┬──────────┬──────────┤
-│ ui-components│ ui-state │navigation│ firebase │    di    │
-├─────────────┴──────────┴──────────┴──────────┤          │
-│                   network                    │          │
-├──────────────────────────────────────────────┤          │
-│                    core                      │          │
-└──────────────────────────────────────────────┴──────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│                            Your App                               │
+├─────────────┬──────────┬──────────┬──────────┬────────┬──────────┤
+│ ui-components│ ui-state │navigation│ firebase │  auth  │    di    │
+├─────────────┴──────────┴──────────┴──────────┴────────┤          │
+│                       network                         │          │
+├───────────────────────────────────────────────────────┤          │
+│                        core                           │          │
+└───────────────────────────────────────────────────────┴──────────┘
 ```
 
 ### Module Dependency Graph
@@ -45,9 +46,11 @@ graph TD
     APP --> STATE[":ui-state"]
     APP --> NAV[":navigation"]
     APP --> FB[":firebase"]
+    APP --> AUTH[":auth"]
 
     DI --> NETWORK[":network"]
     DI --> CORE[":core"]
+    AUTH --> CORE
     FB --> CORE
     UI --> CORE
     STATE --> CORE
@@ -56,6 +59,7 @@ graph TD
 
     style APP fill:#4CAF50,color:#fff,stroke:none,rx:8
     style DI fill:#FF9800,color:#fff,stroke:none,rx:8
+    style AUTH fill:#E91E63,color:#fff,stroke:none,rx:8
     style FB fill:#FF5722,color:#fff,stroke:none,rx:8
     style UI fill:#2196F3,color:#fff,stroke:none,rx:8
     style STATE fill:#2196F3,color:#fff,stroke:none,rx:8
@@ -95,6 +99,7 @@ sequenceDiagram
 | **`:navigation`** | Navigation — `NavigationManager`, safe navigation, transitions, result passing |
 | **`:ui-components`** | UI library — Buttons, TextFields, Dialogs, TopBar, BottomSheet, Theming |
 | **`:firebase`** | Firebase KMP — Remote Config, FCM topic subscribe/unsubscribe, TopicManager |
+| **`:auth`** | Social Auth — Google, Apple, Facebook OAuth with pre-built Compose sign-in buttons |
 | **`:di`** | DI & init — `MiruSdkInitializer`, Koin modules, Compose injection helpers |
 
 ---
@@ -110,6 +115,7 @@ sequenceDiagram
 | Kotlinx Serialization | 1.7.3 | JSON parsing |
 | Kotlinx Coroutines | 1.9.0 | Async programming |
 | Firebase KMP (GitLive) | 2.1.0 | Remote Config, FCM |
+| KMPAuth | 2.5.0-alpha01 | Google, Apple, Facebook OAuth |
 | Coil | 3.0.4 | Image loading |
 | Napier | 2.7.1 | Multiplatform logging |
 | AGP | 9.0.0 | Android build |
@@ -141,6 +147,7 @@ dependencies {
     implementation("com.github.wahidabd.miru-sdk:navigation:<version>")
     implementation("com.github.wahidabd.miru-sdk:ui-components:<version>")
     implementation("com.github.wahidabd.miru-sdk:firebase:<version>")
+    implementation("com.github.wahidabd.miru-sdk:auth:<version>")
     implementation("com.github.wahidabd.miru-sdk:di:<version>")
 }
 ```
@@ -462,6 +469,73 @@ startKoin {
 }
 ```
 
+### Auth
+
+**Google Sign-In** — one-tap sign-in with pre-built button:
+
+```kotlin
+// 1. Initialize once at app startup
+MiruGoogleAuth.initialize(serverClientId = "YOUR_SERVER_CLIENT_ID")
+
+// 2. Use the pre-built button in Composable
+MiruGoogleSignInButton { resource ->
+    resource
+        .onSuccess { auth -> println("Welcome ${auth.displayName}!") }
+        .onError { e, _ -> println("Error: ${e.message}") }
+}
+```
+
+**Apple Sign-In** — native Apple auth via Firebase:
+
+```kotlin
+MiruAppleSignInButton { resource ->
+    resource
+        .onSuccess { auth -> println("Apple user: ${auth.email}") }
+        .onError { e, _ -> println("Error: ${e.message}") }
+}
+```
+
+**Facebook Login** — Facebook auth via Firebase:
+
+```kotlin
+MiruFacebookSignInButton { resource ->
+    resource
+        .onSuccess { auth -> println("Facebook user: ${auth.email}") }
+        .onError { e, _ -> println("Error: ${e.message}") }
+}
+```
+
+**MiruAuthManager** — centralized auth state:
+
+```kotlin
+val authManager: MiruAuthManager = get() // via Koin
+
+// Observe auth state reactively
+authManager.currentUser.collect { user ->
+    if (user != null) navigateToHome()
+    else navigateToLogin()
+}
+
+// Handle sign-in results from any button
+MiruGoogleSignInButton { resource ->
+    authManager.handleSignInResult(resource)
+}
+
+// Sign out
+authManager.signOut()
+```
+
+**Koin setup:**
+
+```kotlin
+startKoin {
+    modules(
+        authModule, // provides MiruGoogleAuth, MiruAppleAuth, MiruFacebookAuth, MiruAuthManager
+        // ... other modules
+    )
+}
+```
+
 ---
 
 ## Project Structure
@@ -517,6 +591,17 @@ miru-sdk/
 │           ├── image/
 │           ├── loading/
 │           └── spacer/
+├── auth/                          # Social Auth (OAuth)
+│   └── src/commonMain/kotlin/
+│       └── com/miru/sdk/auth/
+│           ├── AuthModule.kt
+│           ├── AuthResult.kt
+│           ├── AuthException.kt
+│           ├── MiruAuthManager.kt
+│           ├── google/            # MiruGoogleAuth
+│           ├── apple/             # MiruAppleAuth
+│           ├── facebook/          # MiruFacebookAuth
+│           └── ui/                # Pre-built sign-in buttons
 ├── firebase/                      # Firebase KMP
 │   └── src/commonMain/kotlin/
 │       └── com/miru/sdk/firebase/

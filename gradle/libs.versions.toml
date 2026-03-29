@@ -39,6 +39,9 @@ collections-immutable = "0.3.8"
 gitlive-firebase = "2.1.0"
 firebase-android = "33.7.0"
 
+# Auth (KMPAuth)
+kmpauth = "2.5.0-alpha01"
+
 [libraries]
 # Kotlin
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -96,6 +99,11 @@ firebase-messaging = { module = "dev.gitlive:firebase-messaging", version.ref = 
 firebase-android-common = { module = "com.google.firebase:firebase-common-ktx", version = "21.0.0" }
 firebase-android-config = { module = "com.google.firebase:firebase-config-ktx", version = "22.0.1" }
 firebase-android-messaging = { module = "com.google.firebase:firebase-messaging", version = "24.1.0" }
+
+# KMPAuth
+kmpauth-google = { module = "io.github.mirzemehdi:kmpauth-google", version.ref = "kmpauth" }
+kmpauth-firebase = { module = "io.github.mirzemehdi:kmpauth-firebase", version.ref = "kmpauth" }
+kmpauth-uihelper = { module = "io.github.mirzemehdi:kmpauth-uihelper", version.ref = "kmpauth" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
