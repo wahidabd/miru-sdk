@@ -30,62 +30,13 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            // SDK modules
-            implementation(project(":core"))
-            implementation(project(":network"))
-            implementation(project(":ui-state"))
-            implementation(project(":ui-components"))
-            implementation(project(":navigation"))
-            implementation(project(":persistent"))
-            implementation(project(":di"))
+            // Single umbrella SDK dependency — re-exports all sub-modules + Compose
+            implementation(project(":miru-sdk"))
 
-            // Compose
-            @Suppress("DEPRECATION")
-            implementation(compose.runtime)
-            @Suppress("DEPRECATION")
-            implementation(compose.foundation)
-            @Suppress("DEPRECATION")
-            implementation(compose.material3)
-            @Suppress("DEPRECATION")
-            implementation(compose.materialIconsExtended)
-            @Suppress("DEPRECATION")
-            implementation(compose.ui)
-
-            // Koin
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose)
-            implementation(libs.koin.compose.viewmodel)
-
-            // Ktor (for HttpClient type reference)
-            implementation(libs.ktor.client.core)
-
-            // Serialization
-            implementation(libs.kotlinx.serialization.json)
-
-            // Coroutines
-            implementation(libs.kotlinx.coroutines.core)
-
-            // DateTime
-            implementation(libs.kotlinx.datetime)
-
-            // Room + DataStore
+            // Room + DataStore (sample has its own Room entities)
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
             implementation(libs.androidx.datastore.preferences)
-
-            // Coil
-            implementation(libs.coil.compose)
-            implementation(libs.coil.network.ktor)
-
-            // Logging
-            implementation(libs.napier)
-
-            // Navigation
-            implementation(libs.navigation.compose)
-
-            // Lifecycle
-            implementation(libs.lifecycle.viewmodel)
-            implementation(libs.lifecycle.runtime.compose)
         }
 
         androidMain.dependencies {

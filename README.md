@@ -56,13 +56,15 @@ The dependency rule flows **inward only**: `presentation → domain ← data`. T
 
 ```mermaid
 graph TD
-    APP[Your App] --> DI[":di"]
-    APP --> UI[":ui-components"]
-    APP --> STATE[":ui-state"]
-    APP --> NAV[":navigation"]
-    APP --> FB[":firebase"]
-    APP --> AUTH[":auth"]
-    APP --> PERSIST[":persistent"]
+    APP[Your App] --> SDK[":miru-sdk"]
+
+    SDK --> DI[":di"]
+    SDK --> UI[":ui-components"]
+    SDK --> STATE[":ui-state"]
+    SDK --> NAV[":navigation"]
+    SDK --> FB[":firebase"]
+    SDK --> AUTH[":auth"]
+    SDK --> PERSIST[":persistent"]
 
     DI --> NETWORK[":network"]
     DI --> CORE[":core"]
@@ -75,6 +77,7 @@ graph TD
     NETWORK --> CORE
 
     style APP fill:#4CAF50,color:#fff,stroke:none,rx:8
+    style SDK fill:#00BCD4,color:#fff,stroke:none,rx:8
     style DI fill:#FF9800,color:#fff,stroke:none,rx:8
     style AUTH fill:#E91E63,color:#fff,stroke:none,rx:8
     style FB fill:#FF5722,color:#fff,stroke:none,rx:8
@@ -141,6 +144,7 @@ sequenceDiagram
 
 | Module | Description |
 |---|---|
+| **`:miru-sdk`** | Umbrella module — single dependency that re-exports all modules below via `api()` |
 | **`:core`** | Base utilities — `Resource<T>`, `AppException`, `Mapper`, extensions, logging |
 | **`:network`** | HTTP client — `ApiService`, `safeApiCall`, token management, error handling |
 | **`:ui-state`** | State management — `BaseViewModel`, `UiState`, `MutableEventFlow`, pagination |
@@ -160,7 +164,7 @@ sequenceDiagram
 | Kotlin | 2.3.0 | Language |
 | Compose Multiplatform | 1.10.0 | Shared UI |
 | Ktor | 3.4.1 | HTTP Client |
-| Koin | 4.0.3 | Dependency Injection |
+| Koin | 4.1.0 | Dependency Injection |
 | Kotlinx Serialization | 1.7.3 | JSON parsing |
 | Kotlinx Coroutines | 1.9.0 | Async programming |
 | Firebase KMP (GitLive) | 2.1.0 | Remote Config, FCM |
@@ -187,27 +191,36 @@ dependencyResolutionManagement {
 }
 ```
 
-Add the dependency in your module's `build.gradle.kts`. You can include the entire SDK with a single dependency, or pick individual modules:
+### Kotlin Multiplatform
 
 ```kotlin
-dependencies {
-    // Option 1: All-in-one (includes every module)
-    implementation("com.github.wahidabd.miru-sdk:miru-sdk:<version>")
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            // All-in-one — includes core, network, ui-state, navigation,
+            // ui-components, di, firebase, auth, and persistent
+            implementation("com.github.wahidabd.miru-sdk:miru-sdk:<version>")
+        }
 
-    // Option 2: Pick only what you need
-    implementation("com.github.wahidabd.miru-sdk:core:<version>")
-    implementation("com.github.wahidabd.miru-sdk:network:<version>")
-    implementation("com.github.wahidabd.miru-sdk:ui-state:<version>")
-    implementation("com.github.wahidabd.miru-sdk:navigation:<version>")
-    implementation("com.github.wahidabd.miru-sdk:ui-components:<version>")
-    implementation("com.github.wahidabd.miru-sdk:firebase:<version>")
-    implementation("com.github.wahidabd.miru-sdk:auth:<version>")
-    implementation("com.github.wahidabd.miru-sdk:persistent:<version>")
-    implementation("com.github.wahidabd.miru-sdk:di:<version>")
+        // Or pick only what you need
+        // commonMain.dependencies {
+        //     implementation("com.github.wahidabd.miru-sdk:core:<version>")
+        //     implementation("com.github.wahidabd.miru-sdk:network:<version>")
+        //     implementation("com.github.wahidabd.miru-sdk:ui-state:<version>")
+        // }
+    }
 }
 ```
 
-> Replace `<version>` with the latest release tag.
+### Android Only
+
+```kotlin
+dependencies {
+    implementation("com.github.wahidabd.miru-sdk:miru-sdk:<version>")
+}
+```
+
+> Replace `<version>` with the latest release tag (e.g. `0.1.3`).
 
 ---
 
@@ -492,12 +505,12 @@ class ProductViewModel(
     private val getProductsUseCase: GetProductsUseCase  // domain layer
 ) : BaseViewModel<ProductState, ProductEvent>(ProductState()) {
 
-    fun loadProducts() = launch {
-        getProductsUseCase()
-            .onLoading { setState { copy(isLoading = true) } }
-            .onSuccess { data -> setState { copy(products = data, isLoading = false) } }
-            .onError { e -> setState { copy(error = e.message, isLoading = false) } }
-    }
+    fun loadProducts() = execute(
+        call = { getProductsUseCase() },
+        onLoading = { copy(isLoading = true) },
+        onSuccess = { copy(products = it, isLoading = false) },
+        onError = { copy(error = it.message, isLoading = false) }
+    )
 }
 ```
 
@@ -767,6 +780,11 @@ Each module follows the clean architecture layer convention where applicable. Th
 
 ```
 miru-sdk/
+├── miru-sdk/                          # Umbrella module (re-exports all modules as api())
+│   └── src/commonMain/kotlin/
+│       └── com/miru/sdk/
+│           └── MiruSdk.kt            # SDK version constant
+│
 ├── core/                              # Foundation (shared domain + data abstractions)
 │   └── src/commonMain/kotlin/
 │       └── com/miru/sdk/core/

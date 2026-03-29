@@ -23,19 +23,19 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core"))
 
-            // Compose
+            // Compose — exposed as api() since public API uses Compose types
             @Suppress("DEPRECATION")
-            implementation(compose.runtime)
+            api(compose.runtime)
             @Suppress("DEPRECATION")
-            implementation(compose.foundation)
+            api(compose.foundation)
             @Suppress("DEPRECATION")
-            implementation(compose.material3)
+            api(compose.material3)
             @Suppress("DEPRECATION")
-            implementation(compose.materialIconsExtended)
+            api(compose.materialIconsExtended)
             @Suppress("DEPRECATION")
-            implementation(compose.ui)
+            api(compose.ui)
             @Suppress("DEPRECATION")
-            implementation(compose.components.resources)
+            api(compose.components.resources)
 
             // Image loading
             implementation(libs.coil.compose)
