@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
+import androidx.navigation.navOptions
 import androidx.savedstate.read
 
 /**
@@ -115,14 +116,14 @@ class MiruNavOptionsBuilder {
      * @return The configured NavOptions
      */
     fun build(): NavOptions {
-        return NavOptions.Builder().apply {
-            if (launchSingleTop) {
-                setLaunchSingleTop(true)
+        return navOptions {
+            this.launchSingleTop = this@MiruNavOptionsBuilder.launchSingleTop
+            this@MiruNavOptionsBuilder.popUpTo?.let { popUp ->
+                popUpTo(popUp.route) {
+                    inclusive = popUp.inclusive
+                }
             }
-            popUpTo?.let {
-                setPopUpTo(it.route, it.inclusive)
-            }
-        }.build()
+        }
     }
 
     /**
