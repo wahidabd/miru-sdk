@@ -41,6 +41,7 @@ firebase-android = "33.7.0"
 
 # Auth (KMPAuth)
 kmpauth = "2.5.0-alpha01"
+facebook-android-login = "17.0.0"
 
 [libraries]
 # Kotlin
@@ -99,11 +100,12 @@ firebase-messaging = { module = "dev.gitlive:firebase-messaging", version.ref = 
 firebase-android-common = { module = "com.google.firebase:firebase-common-ktx", version = "21.0.0" }
 firebase-android-config = { module = "com.google.firebase:firebase-config-ktx", version = "22.0.1" }
 firebase-android-messaging = { module = "com.google.firebase:firebase-messaging", version = "24.1.0" }
+firebase-android-auth = { module = "com.google.firebase:firebase-auth-ktx", version = "23.1.0" }
 
 # KMPAuth
 kmpauth-google = { module = "io.github.mirzemehdi:kmpauth-google", version.ref = "kmpauth" }
-kmpauth-firebase = { module = "io.github.mirzemehdi:kmpauth-firebase", version.ref = "kmpauth" }
 kmpauth-uihelper = { module = "io.github.mirzemehdi:kmpauth-uihelper", version.ref = "kmpauth" }
+facebook-login = { module = "com.facebook.android:facebook-login", version.ref = "facebook-android-login" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

@@ -2,7 +2,6 @@ package com.miru.sdk.auth
 
 import com.miru.sdk.auth.apple.MiruAppleAuth
 import com.miru.sdk.auth.facebook.MiruFacebookAuth
-import com.miru.sdk.auth.google.MiruGoogleAuth
 import org.koin.dsl.module
 
 /**
@@ -11,19 +10,15 @@ import org.koin.dsl.module
  * Usage:
  * ```
  * startKoin {
- *     modules(
- *         authModule,
- *         // ... other modules
- *     )
+ *     modules(authModule)
  * }
  *
- * // Don't forget to initialize Google Auth:
+ * // Initialize Google Auth:
  * MiruGoogleAuth.initialize(serverClientId = "YOUR_SERVER_CLIENT_ID")
  * ```
  */
 val authModule = module {
-    single { MiruGoogleAuth() }
+    single { MiruAuthManager() }
     single { MiruAppleAuth() }
     single { MiruFacebookAuth() }
-    single { MiruAuthManager(get(), get(), get()) }
 }

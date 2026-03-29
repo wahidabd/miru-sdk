@@ -9,7 +9,7 @@ plugins {
 kotlin {
     androidLibrary {
         namespace = "com.miru.sdk.auth"
-        compileSdk = 35
+        compileSdk = 36
         minSdk = 24
     }
 
@@ -27,9 +27,8 @@ kotlin {
             implementation(libs.napier)
             implementation(libs.koin.core)
 
-            // KMPAuth
+            // KMPAuth — standalone Google (no Firebase)
             implementation(libs.kmpauth.google)
-            implementation(libs.kmpauth.firebase)
             implementation(libs.kmpauth.uihelper)
 
             // Compose
@@ -39,6 +38,11 @@ kotlin {
             implementation(compose.foundation)
             @Suppress("DEPRECATION")
             implementation(compose.material3)
+        }
+
+        androidMain.dependencies {
+            // Facebook Android SDK
+            implementation(libs.facebook.login)
         }
 
         commonTest.dependencies {

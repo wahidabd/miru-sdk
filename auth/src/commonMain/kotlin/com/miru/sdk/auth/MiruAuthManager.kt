@@ -1,8 +1,5 @@
 package com.miru.sdk.auth
 
-import com.miru.sdk.auth.apple.MiruAppleAuth
-import com.miru.sdk.auth.facebook.MiruFacebookAuth
-import com.miru.sdk.auth.google.MiruGoogleAuth
 import com.miru.sdk.core.Resource
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,8 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * Central auth manager that tracks the current authentication state.
  *
- * Works with [MiruGoogleAuth], [MiruAppleAuth], and [MiruFacebookAuth]
- * to provide a unified auth experience.
+ * Provider-agnostic — works with any sign-in flow that produces an [AuthResult].
  *
  * Usage:
  * ```
@@ -25,45 +21,36 @@ import kotlinx.coroutines.flow.asStateFlow
  *     else navigateToLogin()
  * }
  *
- * // Set auth result from sign-in button callback
- * authManager.setAuthResult(authResult)
+ * // Handle sign-in result from any button
+ * MiruGoogleSignInButton { resource ->
+ *     authManager.handleSignInResult(resource)
+ * }
  *
  * // Sign out
  * authManager.signOut()
  * ```
  */
-class MiruAuthManager(
-    val googleAuth: MiruGoogleAuth,
-    val appleAuth: MiruAppleAuth,
-    val facebookAuth: MiruFacebookAuth,
-) {
+class MiruAuthManager {
+
     private val _currentUser = MutableStateFlow<AuthResult?>(null)
 
-    /**
-     * Reactive state of the currently authenticated user.
-     * Null means no user is signed in.
-     */
+    /** Reactive state of the currently authenticated user. Null = not signed in. */
     val currentUser: StateFlow<AuthResult?> = _currentUser.asStateFlow()
 
-    /**
-     * Whether a user is currently signed in.
-     */
+    /** Whether a user is currently signed in. */
     val isSignedIn: Boolean get() = _currentUser.value != null
 
     /**
      * Set the auth result after a successful sign-in.
-     * Typically called from sign-in button callbacks.
      */
     fun setAuthResult(result: AuthResult) {
         _currentUser.value = result
-        Napier.d("Auth state updated: provider=${result.provider}, email=${result.email}")
+        Napier.d("Auth: ${result.provider} — ${result.email}")
     }
 
     /**
      * Handle a [Resource<AuthResult>] from any sign-in flow.
-     * Automatically updates [currentUser] on success.
-     *
-     * @return the same Resource for chaining
+     * Auto-updates [currentUser] on success.
      */
     fun handleSignInResult(resource: Resource<AuthResult>): Resource<AuthResult> {
         when (resource) {
@@ -74,12 +61,10 @@ class MiruAuthManager(
         return resource
     }
 
-    /**
-     * Clear the current authentication state.
-     */
+    /** Clear auth state. */
     fun signOut() {
-        val previous = _currentUser.value
+        val prev = _currentUser.value
         _currentUser.value = null
-        Napier.d("Signed out from ${previous?.provider?.name ?: "unknown"}")
+        Napier.d("Signed out from ${prev?.provider?.name ?: "none"}")
     }
 }

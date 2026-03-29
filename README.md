@@ -471,44 +471,59 @@ startKoin {
 
 ### Auth
 
-**Google Sign-In** — one-tap sign-in with pre-built button:
+**Google Sign-In** — standalone One Tap, dapet `idToken` langsung (no Firebase):
 
 ```kotlin
 // 1. Initialize once at app startup
 MiruGoogleAuth.initialize(serverClientId = "YOUR_SERVER_CLIENT_ID")
 
-// 2. Use the pre-built button in Composable
+// 2. Pre-built Compose button
 MiruGoogleSignInButton { resource ->
-    resource
-        .onSuccess { auth -> println("Welcome ${auth.displayName}!") }
-        .onError { e, _ -> println("Error: ${e.message}") }
+    resource.onSuccess { auth ->
+        // Send idToken to your backend API
+        api.loginWithGoogle(auth.idToken!!)
+    }
 }
 ```
 
-**Apple Sign-In** — native Apple auth via Firebase:
+**Apple Sign-In** — native iOS only, returns `identityToken`:
 
 ```kotlin
-MiruAppleSignInButton { resource ->
-    resource
-        .onSuccess { auth -> println("Apple user: ${auth.email}") }
-        .onError { e, _ -> println("Error: ${e.message}") }
+val appleAuth: MiruAppleAuth = get()
+
+if (appleAuth.isAvailable()) {
+    val result = appleAuth.signIn() // shows native Apple popup
+    result?.let { auth ->
+        // auth.idToken = Apple identityToken
+        // auth.email, auth.displayName
+        api.loginWithApple(auth.idToken!!)
+    }
 }
 ```
 
-**Facebook Login** — Facebook auth via Firebase:
+**Facebook Login** — native SDK, returns `accessToken`:
 
 ```kotlin
-MiruFacebookSignInButton { resource ->
-    resource
-        .onSuccess { auth -> println("Facebook user: ${auth.email}") }
-        .onError { e, _ -> println("Error: ${e.message}") }
+// Android: set ActivityResultRegistryOwner before sign-in (in your Activity's onCreate)
+MiruFacebookAuth.setActivityResultRegistryOwner(this)
+
+val facebookAuth: MiruFacebookAuth = get()
+
+val result = facebookAuth.signIn() // shows Facebook login popup
+result?.let { auth ->
+    // auth.accessToken = Facebook access token
+    // auth.email, auth.displayName, auth.photoUrl
+    api.loginWithFacebook(auth.accessToken!!)
 }
+
+// Android: clear in onDestroy to prevent leaks
+MiruFacebookAuth.clearActivityResultRegistryOwner()
 ```
 
-**MiruAuthManager** — centralized auth state:
+**MiruAuthManager** — centralized auth state (provider-agnostic):
 
 ```kotlin
-val authManager: MiruAuthManager = get() // via Koin
+val authManager: MiruAuthManager = get()
 
 // Observe auth state reactively
 authManager.currentUser.collect { user ->
@@ -516,7 +531,7 @@ authManager.currentUser.collect { user ->
     else navigateToLogin()
 }
 
-// Handle sign-in results from any button
+// Handle any sign-in result
 MiruGoogleSignInButton { resource ->
     authManager.handleSignInResult(resource)
 }
@@ -525,16 +540,11 @@ MiruGoogleSignInButton { resource ->
 authManager.signOut()
 ```
 
-**Koin setup:**
-
-```kotlin
-startKoin {
-    modules(
-        authModule, // provides MiruGoogleAuth, MiruAppleAuth, MiruFacebookAuth, MiruAuthManager
-        // ... other modules
-    )
-}
-```
+| Provider | Platform | Implementation |
+|---|---|---|
+| Google | Android + iOS | KMPAuth standalone (commonMain) |
+| Apple | iOS only | Native ASAuthorization (iosMain) |
+| Facebook | Android + iOS | Facebook SDK (expect/actual) |
 
 ---
 

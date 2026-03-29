@@ -1,53 +1,62 @@
 package com.miru.sdk.auth.ui
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.miru.sdk.auth.AuthProvider
 import com.miru.sdk.auth.AuthResult
-import com.miru.sdk.auth.google.MiruGoogleAuth
+import com.miru.sdk.core.AppException
 import com.miru.sdk.core.Resource
-import com.mmk.kmpauth.google.GoogleButtonMode
+import com.mmk.kmpauth.google.GoogleButtonUiContainer
 import com.mmk.kmpauth.uihelper.google.GoogleSignInButton
 import io.github.aakira.napier.Napier
 
 /**
- * Pre-built Google Sign-In button using KMPAuth's native UI.
+ * Pre-built Google Sign-In button — standalone OAuth (no Firebase needed).
  *
- * Handles the full OAuth flow and returns [Resource<AuthResult>] via callback.
+ * Shows Google One Tap popup and returns the user's idToken, email, etc.
+ * Send the idToken to your own backend for verification.
  *
  * Usage:
  * ```
- * MiruGoogleSignInButton(
- *     onResult = { resource ->
- *         resource
- *             .onSuccess { auth -> println("Signed in: ${auth.email}") }
- *             .onError { e, _ -> println("Error: ${e.message}") }
+ * // 1. Initialize once at app startup
+ * MiruGoogleAuth.initialize(serverClientId = "YOUR_SERVER_CLIENT_ID")
+ *
+ * // 2. Use in Composable
+ * MiruGoogleSignInButton { resource ->
+ *     resource.onSuccess { auth ->
+ *         // Send auth.idToken to your backend API
+ *         api.loginWithGoogle(auth.idToken!!)
  *     }
- * )
+ * }
  * ```
  */
 @Composable
 fun MiruGoogleSignInButton(
     modifier: Modifier = Modifier,
-    mode: GoogleButtonMode = GoogleButtonMode.POPUP,
     onResult: (Resource<AuthResult>) -> Unit,
 ) {
-    val googleAuth = MiruGoogleAuth()
-
-    GoogleSignInButton(
-        modifier = modifier,
-        mode = mode,
+    GoogleButtonUiContainer(
         onGoogleSignInResult = { googleUser ->
-            val result = if (googleUser != null) {
-                googleAuth.handleResult(
+            if (googleUser != null) {
+                val result = AuthResult(
                     idToken = googleUser.idToken,
+                    accessToken = googleUser.accessToken,
                     displayName = googleUser.displayName,
                     email = googleUser.email,
                     photoUrl = googleUser.profilePicUrl,
+                    provider = AuthProvider.GOOGLE,
                 )
+                Napier.d("Google sign-in success: ${googleUser.email}")
+                onResult(Resource.Success(result))
             } else {
-                googleAuth.handleError(Exception("Google sign-in returned null user"))
+                Napier.e("Google sign-in: null user returned")
+                onResult(Resource.Error(AppException.UnknownException(throwable = Exception("Google sign-in returned null"))))
             }
-            onResult(result)
         },
-    )
+    ) {
+        GoogleSignInButton(modifier = modifier.fillMaxWidth()) {
+            this.onClick()
+        }
+    }
 }

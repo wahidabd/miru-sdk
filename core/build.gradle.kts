@@ -8,7 +8,7 @@ plugins {
 kotlin {
     androidLibrary {
         namespace = "com.miru.sdk.core"
-        compileSdk = 35
+        compileSdk = 36
         minSdk = 24
     }
 
