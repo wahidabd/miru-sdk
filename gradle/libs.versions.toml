@@ -35,6 +35,10 @@ napier = "2.7.1"
 # KotlinX Immutable Collections
 collections-immutable = "0.3.8"
 
+# Firebase (GitLive KMP SDK)
+gitlive-firebase = "2.1.0"
+firebase-android = "33.7.0"
+
 [libraries]
 # Kotlin
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -82,6 +86,16 @@ napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 
 # Immutable Collections
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "collections-immutable" }
+
+# Firebase (GitLive KMP SDK)
+firebase-common = { module = "dev.gitlive:firebase-common", version.ref = "gitlive-firebase" }
+firebase-config = { module = "dev.gitlive:firebase-config", version.ref = "gitlive-firebase" }
+firebase-messaging = { module = "dev.gitlive:firebase-messaging", version.ref = "gitlive-firebase" }
+
+# Firebase Android SDK (explicit — BOM platform() deprecated in Kotlin 2.3 KMP)
+firebase-android-common = { module = "com.google.firebase:firebase-common-ktx", version = "21.0.0" }
+firebase-android-config = { module = "com.google.firebase:firebase-config-ktx", version = "22.0.1" }
+firebase-android-messaging = { module = "com.google.firebase:firebase-messaging", version = "24.1.0" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

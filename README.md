@@ -17,6 +17,7 @@ Miru SDK provides a modular, configurable foundation for building Android and iO
 - **Navigation** — Compose Navigation wrapper with safe navigation, transitions, and result passing
 - **UI Components** — Ready-to-use Material 3 composables with full theming
 - **Dependency Injection** — Koin-powered DI with Compose integration
+- **Firebase** — Remote Config + FCM topic management with KMP support
 - **Configurable** — Override themes, API configs, and inject custom modules per project
 
 ---
@@ -24,15 +25,15 @@ Miru SDK provides a modular, configurable foundation for building Android and iO
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│                   Your App                       │
-├─────────────┬──────────┬──────────┬─────────────┤
-│ ui-components│ ui-state │navigation│     di      │
-├─────────────┴──────────┴──────────┤             │
-│              network              │             │
-├───────────────────────────────────┤             │
-│               core                │             │
-└───────────────────────────────────┴─────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                        Your App                          │
+├─────────────┬──────────┬──────────┬──────────┬──────────┤
+│ ui-components│ ui-state │navigation│ firebase │    di    │
+├─────────────┴──────────┴──────────┴──────────┤          │
+│                   network                    │          │
+├──────────────────────────────────────────────┤          │
+│                    core                      │          │
+└──────────────────────────────────────────────┴──────────┘
 ```
 
 ### Module Dependency Graph
@@ -43,9 +44,11 @@ graph TD
     APP --> UI[":ui-components"]
     APP --> STATE[":ui-state"]
     APP --> NAV[":navigation"]
+    APP --> FB[":firebase"]
 
     DI --> NETWORK[":network"]
     DI --> CORE[":core"]
+    FB --> CORE
     UI --> CORE
     STATE --> CORE
     NAV --> CORE
@@ -53,6 +56,7 @@ graph TD
 
     style APP fill:#4CAF50,color:#fff,stroke:none,rx:8
     style DI fill:#FF9800,color:#fff,stroke:none,rx:8
+    style FB fill:#FF5722,color:#fff,stroke:none,rx:8
     style UI fill:#2196F3,color:#fff,stroke:none,rx:8
     style STATE fill:#2196F3,color:#fff,stroke:none,rx:8
     style NAV fill:#2196F3,color:#fff,stroke:none,rx:8
@@ -90,6 +94,7 @@ sequenceDiagram
 | **`:ui-state`** | State management — `BaseViewModel`, `UiState`, `MutableEventFlow`, pagination |
 | **`:navigation`** | Navigation — `NavigationManager`, safe navigation, transitions, result passing |
 | **`:ui-components`** | UI library — Buttons, TextFields, Dialogs, TopBar, BottomSheet, Theming |
+| **`:firebase`** | Firebase KMP — Remote Config, FCM topic subscribe/unsubscribe, TopicManager |
 | **`:di`** | DI & init — `MiruSdkInitializer`, Koin modules, Compose injection helpers |
 
 ---
@@ -104,6 +109,7 @@ sequenceDiagram
 | Koin | 4.0.3 | Dependency Injection |
 | Kotlinx Serialization | 1.7.3 | JSON parsing |
 | Kotlinx Coroutines | 1.9.0 | Async programming |
+| Firebase KMP (GitLive) | 2.1.0 | Remote Config, FCM |
 | Coil | 3.0.4 | Image loading |
 | Napier | 2.7.1 | Multiplatform logging |
 | AGP | 9.0.0 | Android build |
@@ -134,6 +140,7 @@ dependencies {
     implementation("com.github.wahidabd.miru-sdk:ui-state:<version>")
     implementation("com.github.wahidabd.miru-sdk:navigation:<version>")
     implementation("com.github.wahidabd.miru-sdk:ui-components:<version>")
+    implementation("com.github.wahidabd.miru-sdk:firebase:<version>")
     implementation("com.github.wahidabd.miru-sdk:di:<version>")
 }
 ```
@@ -399,6 +406,62 @@ MiruLoadingIndicator MiruShimmerEffect  MiruNetworkImage
 MiruSpacer          MiruVerticalSpacer  MiruHorizontalSpacer
 ```
 
+### Firebase
+
+**Remote Config** — fetch and read config values:
+
+```kotlin
+val config: MiruRemoteConfig = get() // via Koin
+
+// Set defaults before fetching
+config.setDefaults(mapOf(
+    "feature_new_ui" to false,
+    "api_base_url" to "https://api.yourapp.com",
+    "max_retry" to 3L
+))
+
+// Fetch & activate
+config.fetchAndActivate().collect { resource ->
+    resource.onSuccess { activated -> println("Config activated: $activated") }
+}
+
+// Read values
+val featureEnabled = config.getBoolean("feature_new_ui")
+val apiUrl = config.getString("api_base_url")
+val maxRetry = config.getLong("max_retry")
+```
+
+**FCM Topic Management** — subscribe/unsubscribe with reactive state tracking:
+
+```kotlin
+val topicManager: TopicManager = get() // via Koin
+
+// Subscribe to topics
+topicManager.subscribe("promo")
+topicManager.subscribeAll(listOf("news", "updates", "alerts"))
+
+// Observe active subscriptions reactively
+topicManager.subscribedTopics.collect { topics ->
+    println("Subscribed to: $topics")
+}
+
+// Check & unsubscribe
+if (topicManager.isSubscribed("promo")) {
+    topicManager.unsubscribe("promo")
+}
+```
+
+**Koin setup:**
+
+```kotlin
+startKoin {
+    modules(
+        firebaseModule, // provides MiruRemoteConfig, MiruMessaging, TopicManager
+        // ... other modules
+    )
+}
+```
+
 ---
 
 ## Project Structure
@@ -454,6 +517,12 @@ miru-sdk/
 │           ├── image/
 │           ├── loading/
 │           └── spacer/
+├── firebase/                      # Firebase KMP
+│   └── src/commonMain/kotlin/
+│       └── com/miru/sdk/firebase/
+│           ├── FirebaseModule.kt
+│           ├── config/            # MiruRemoteConfig
+│           └── messaging/         # MiruMessaging, TopicManager
 ├── di/                            # Dependency injection
 │   └── src/commonMain/kotlin/
 │       └── com/miru/sdk/di/

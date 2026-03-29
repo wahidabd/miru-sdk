@@ -3,9 +3,8 @@ package com.miru.sdk.network
 import com.miru.sdk.core.AppException
 import com.miru.sdk.core.Resource
 import io.github.aakira.napier.Napier
-import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
-import io.ktor.utils.io.errors.IOException
+import kotlinx.io.IOException
 import kotlinx.coroutines.TimeoutCancellationException
 
 /**
@@ -31,19 +30,24 @@ suspend inline fun <reified T> safeApiCall(
                 code = 400,
                 errorMessage = "Bad Request"
             )
+
             401 -> AppException.UnauthorizedException(
                 message = "Unauthorized"
             )
+
             403 -> AppException.ForbiddenException(
                 message = "Forbidden"
             )
+
             404 -> AppException.NotFoundException(
                 message = "Resource not found"
             )
+
             in 500..599 -> AppException.ServerException(
                 code = statusCode,
                 message = description
             )
+
             else -> AppException.ApiException(
                 code = statusCode,
                 errorMessage = description

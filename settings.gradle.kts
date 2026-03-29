@@ -1,12 +1,6 @@
 pluginManagement {
     repositories {
-        google {
-            mavenContent {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
+        google()
         mavenCentral()
         gradlePluginPortal()
     }
@@ -14,13 +8,7 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        google {
-            mavenContent {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
+        google()
         mavenCentral()
     }
 }
@@ -33,3 +21,4 @@ include(":ui-state")
 include(":navigation")
 include(":ui-components")
 include(":di")
+include(":firebase")
