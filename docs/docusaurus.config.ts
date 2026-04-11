@@ -69,8 +69,8 @@ const config: Config = {
           position: 'left',
         },
         {
-          href: 'https://jitpack.io/#wahidabd/miru-sdk',
-          label: 'JitPack',
+          href: 'https://central.sonatype.com/artifact/io.github.wahidabd/miru-sdk',
+          label: 'Maven Central',
           position: 'right',
         },
         {
@@ -103,7 +103,7 @@ const config: Config = {
           title: 'More',
           items: [
             { label: 'GitHub', href: 'https://github.com/wahidabd/miru-sdk' },
-            { label: 'JitPack', href: 'https://jitpack.io/#wahidabd/miru-sdk' },
+            { label: 'Maven Central', href: 'https://central.sonatype.com/artifact/io.github.wahidabd/miru-sdk' },
           ],
         },
       ],

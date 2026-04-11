@@ -56,7 +56,7 @@ function HomepageHeader() {
           </Link>
         </div>
         <div className={styles.installSnippet}>
-          <code>implementation("com.github.wahidabd.miru-sdk:miru-sdk:{'<version>'}")</code>
+          <code>implementation("io.github.wahidabd:miru-sdk:{'<version>'}")</code>
         </div>
       </div>
     </header>
