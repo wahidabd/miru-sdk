@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
-    `maven-publish`
+    id("publish")
 }
 
 kotlin {

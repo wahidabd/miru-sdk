@@ -8,7 +8,7 @@ title: Network
 Data layer module providing Ktor-based HTTP client with automatic error mapping, token management, and type-safe API definitions.
 
 ```kotlin
-implementation("com.github.wahidabd.miru-sdk:network:<version>")
+implementation("io.github.wahidabd:miru-sdk-network:<version>")
 ```
 
 ## ApiService

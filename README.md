@@ -6,7 +6,7 @@ Miru SDK provides a modular, configurable foundation for building Android and iO
 
 Each module follows **Clean Architecture** principles with clear separation into **data**, **domain**, and **presentation** layers, ensuring testability, maintainability, and independence between layers.
 
-[![](https://jitpack.io/v/wahidabd/miru-sdk.svg)](https://jitpack.io/#wahidabd/miru-sdk)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.wahidabd/miru-sdk)](https://central.sonatype.com/artifact/io.github.wahidabd/miru-sdk)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-00BCD4)](https://wahidabd.github.io/miru-sdk/)
 
 > **[Read the full documentation →](https://wahidabd.github.io/miru-sdk/)**
@@ -182,17 +182,7 @@ sequenceDiagram
 
 ## Installation
 
-Add JitPack repository to your `settings.gradle.kts`:
-
-```kotlin
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://jitpack.io")
-    }
-}
-```
+Miru SDK is available on Maven Central — no extra repository configuration needed.
 
 ### Kotlin Multiplatform
 
@@ -202,14 +192,14 @@ kotlin {
         commonMain.dependencies {
             // All-in-one — includes core, network, ui-state, navigation,
             // ui-components, di, firebase, auth, and persistent
-            implementation("com.github.wahidabd.miru-sdk:miru-sdk:<version>")
+            implementation("io.github.wahidabd:miru-sdk:<version>")
         }
 
         // Or pick only what you need
         // commonMain.dependencies {
-        //     implementation("com.github.wahidabd.miru-sdk:core:<version>")
-        //     implementation("com.github.wahidabd.miru-sdk:network:<version>")
-        //     implementation("com.github.wahidabd.miru-sdk:ui-state:<version>")
+        //     implementation("io.github.wahidabd:miru-sdk-core:<version>")
+        //     implementation("io.github.wahidabd:miru-sdk-network:<version>")
+        //     implementation("io.github.wahidabd:miru-sdk-ui-state:<version>")
         // }
     }
 }
@@ -219,11 +209,11 @@ kotlin {
 
 ```kotlin
 dependencies {
-    implementation("com.github.wahidabd.miru-sdk:miru-sdk:<version>")
+    implementation("io.github.wahidabd:miru-sdk:<version>")
 }
 ```
 
-> Replace `<version>` with the latest release tag (e.g. `0.1.3`).
+> Replace `<version>` with the latest release from [Maven Central](https://central.sonatype.com/artifact/io.github.wahidabd/miru-sdk).
 
 ---
 
@@ -996,8 +986,7 @@ miru-sdk/
 ├── gradle/
 │   └── libs.versions.toml            # Version catalog
 ├── build.gradle.kts
-├── settings.gradle.kts
-└── jitpack.yml
+└── settings.gradle.kts
 ```
 
 ### Layer Mapping Summary

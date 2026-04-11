@@ -8,7 +8,7 @@ title: Introduction
 
 **Kotlin Multiplatform SDK for accelerating mobile development.**
 
-[![JitPack](https://jitpack.io/v/wahidabd/miru-sdk.svg)](https://jitpack.io/#wahidabd/miru-sdk)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.wahidabd/miru-sdk)](https://central.sonatype.com/artifact/io.github.wahidabd/miru-sdk)
 
 Miru SDK provides a modular, configurable foundation for building Android and iOS apps with shared business logic and UI components. Designed as an internal base project for software houses, it handles networking, state management, navigation, theming, and dependency injection out of the box — so your team can focus on features, not boilerplate.
 

@@ -8,7 +8,7 @@ title: Navigation
 Compose Navigation wrapper with safe navigation, custom transitions, and result passing.
 
 ```kotlin
-implementation("com.github.wahidabd.miru-sdk:navigation:<version>")
+implementation("io.github.wahidabd:miru-sdk-navigation:<version>")
 ```
 
 ## MiruNavHost

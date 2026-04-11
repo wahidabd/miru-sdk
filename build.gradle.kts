@@ -6,9 +6,10 @@ plugins {
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.kotlin.multiplatform.library) apply false
+    alias(libs.plugins.maven.publish) apply false
 }
 
 allprojects {
-    group = "com.github.user.miru-sdk"
-    version = "0.1.0"
+    group = "io.github.wahidabd"
+    version = "0.1.5"
 }

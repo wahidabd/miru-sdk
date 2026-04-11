@@ -8,7 +8,7 @@ title: UI Components
 Presentation layer module with ready-to-use Material 3 composables, full theming support, and `MiruResourceView` for declarative loading states.
 
 ```kotlin
-implementation("com.github.wahidabd.miru-sdk:ui-components:<version>")
+implementation("io.github.wahidabd:miru-sdk-ui-components:<version>")
 ```
 
 ## Theming

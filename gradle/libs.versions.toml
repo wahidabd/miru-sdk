@@ -1,4 +1,7 @@
 [versions]
+# Maven Publish
+mavenPublish = "0.30.0"
+
 # Kotlin & Compose
 kotlin = "2.3.0"
 compose-multiplatform = "1.10.0"
@@ -140,3 +143,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "room" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }

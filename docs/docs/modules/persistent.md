@@ -8,7 +8,7 @@ title: Persistent
 Local storage through Room KMP (SQLite database) and DataStore (key-value preferences).
 
 ```kotlin
-implementation("com.github.wahidabd.miru-sdk:persistent:<version>")
+implementation("io.github.wahidabd:miru-sdk-persistent:<version>")
 ```
 
 ## Setup

@@ -13,15 +13,15 @@ If you're currently importing individual modules, you can simplify by switching 
 
 ```kotlin
 commonMain.dependencies {
-    implementation("com.github.wahidabd.miru-sdk:core:<version>")
-    implementation("com.github.wahidabd.miru-sdk:network:<version>")
-    implementation("com.github.wahidabd.miru-sdk:ui-state:<version>")
-    implementation("com.github.wahidabd.miru-sdk:ui-components:<version>")
-    implementation("com.github.wahidabd.miru-sdk:navigation:<version>")
-    implementation("com.github.wahidabd.miru-sdk:di:<version>")
-    implementation("com.github.wahidabd.miru-sdk:firebase:<version>")
-    implementation("com.github.wahidabd.miru-sdk:auth:<version>")
-    implementation("com.github.wahidabd.miru-sdk:persistent:<version>")
+    implementation("io.github.wahidabd:miru-sdk-core:<version>")
+    implementation("io.github.wahidabd:miru-sdk-network:<version>")
+    implementation("io.github.wahidabd:miru-sdk-ui-state:<version>")
+    implementation("io.github.wahidabd:miru-sdk-ui-components:<version>")
+    implementation("io.github.wahidabd:miru-sdk-navigation:<version>")
+    implementation("io.github.wahidabd:miru-sdk-di:<version>")
+    implementation("io.github.wahidabd:miru-sdk-firebase:<version>")
+    implementation("io.github.wahidabd:miru-sdk-auth:<version>")
+    implementation("io.github.wahidabd:miru-sdk-persistent:<version>")
 }
 ```
 
@@ -29,7 +29,7 @@ commonMain.dependencies {
 
 ```kotlin
 commonMain.dependencies {
-    implementation("com.github.wahidabd.miru-sdk:miru-sdk:<version>")
+    implementation("io.github.wahidabd:miru-sdk:<version>")
 }
 ```
 

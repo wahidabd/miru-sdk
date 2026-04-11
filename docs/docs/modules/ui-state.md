@@ -8,7 +8,7 @@ title: UI State
 Presentation layer module providing `BaseViewModel` with MVI-style state management, one-time events, and 5 async helpers.
 
 ```kotlin
-implementation("com.github.wahidabd.miru-sdk:ui-state:<version>")
+implementation("io.github.wahidabd:miru-sdk-ui-state:<version>")
 ```
 
 ## BaseViewModel

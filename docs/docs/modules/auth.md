@@ -8,7 +8,7 @@ title: Auth
 Social authentication with Google, Apple, and Facebook OAuth, including pre-built Compose sign-in buttons.
 
 ```kotlin
-implementation("com.github.wahidabd.miru-sdk:auth:<version>")
+implementation("io.github.wahidabd:miru-sdk-auth:<version>")
 ```
 
 ## Google Sign-In

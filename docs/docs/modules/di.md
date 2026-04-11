@@ -8,7 +8,7 @@ title: DI
 Dependency injection module providing SDK initialization, Koin module wiring, and Compose injection helpers.
 
 ```kotlin
-implementation("com.github.wahidabd.miru-sdk:di:<version>")
+implementation("io.github.wahidabd:miru-sdk-di:<version>")
 ```
 
 ## MiruSdkInitializer

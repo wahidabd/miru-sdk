@@ -8,7 +8,7 @@ title: Core
 The foundation layer with zero UI dependencies. Every other module in Miru SDK depends on `:core`.
 
 ```kotlin
-implementation("com.github.wahidabd.miru-sdk:core:<version>")
+implementation("io.github.wahidabd:miru-sdk-core:<version>")
 ```
 
 ## Resource

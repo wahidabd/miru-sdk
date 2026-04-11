@@ -8,7 +8,7 @@ title: Firebase
 Firebase KMP integration via GitLive, providing Remote Config and FCM topic management.
 
 ```kotlin
-implementation("com.github.wahidabd.miru-sdk:firebase:<version>")
+implementation("io.github.wahidabd:miru-sdk-firebase:<version>")
 ```
 
 :::caution

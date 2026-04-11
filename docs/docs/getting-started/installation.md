@@ -5,19 +5,7 @@ title: Installation
 
 # Installation
 
-## Add JitPack Repository
-
-Add JitPack to your `settings.gradle.kts`:
-
-```kotlin
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://jitpack.io")
-    }
-}
-```
+Miru SDK is published to Maven Central — no extra repository configuration needed. `mavenCentral()` is already included by default in Gradle.
 
 ## Kotlin Multiplatform
 
@@ -29,7 +17,7 @@ Use the umbrella module to get every module in a single dependency:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.github.wahidabd.miru-sdk:miru-sdk:<version>")
+            implementation("io.github.wahidabd:miru-sdk:<version>")
         }
     }
 }
@@ -43,9 +31,9 @@ Pick only what you need:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.github.wahidabd.miru-sdk:core:<version>")
-            implementation("com.github.wahidabd.miru-sdk:network:<version>")
-            implementation("com.github.wahidabd.miru-sdk:ui-state:<version>")
+            implementation("io.github.wahidabd:miru-sdk-core:<version>")
+            implementation("io.github.wahidabd:miru-sdk-network:<version>")
+            implementation("io.github.wahidabd:miru-sdk-ui-state:<version>")
             // ... add more as needed
         }
     }
@@ -58,7 +46,7 @@ If your project is Android-only:
 
 ```kotlin
 dependencies {
-    implementation("com.github.wahidabd.miru-sdk:miru-sdk:<version>")
+    implementation("io.github.wahidabd:miru-sdk:<version>")
 }
 ```
 
@@ -67,18 +55,18 @@ dependencies {
 | Artifact ID | Description |
 |---|---|
 | `miru-sdk` | Umbrella — includes everything below |
-| `core` | Resource, AppException, extensions |
-| `network` | Ktor HTTP client, token management |
-| `ui-state` | BaseViewModel, UiState, EventFlow |
-| `ui-components` | Compose UI components, theming |
-| `navigation` | Navigation wrapper, transitions |
-| `di` | Koin DI, SDK initializer |
-| `firebase` | Remote Config, FCM topics |
-| `auth` | Google, Apple, Facebook OAuth |
-| `persistent` | Room KMP, DataStore |
+| `miru-sdk-core` | Resource, AppException, extensions |
+| `miru-sdk-network` | Ktor HTTP client, token management |
+| `miru-sdk-ui-state` | BaseViewModel, UiState, EventFlow |
+| `miru-sdk-ui-components` | Compose UI components, theming |
+| `miru-sdk-navigation` | Navigation wrapper, transitions |
+| `miru-sdk-di` | Koin DI, SDK initializer |
+| `miru-sdk-firebase` | Remote Config, FCM topics |
+| `miru-sdk-auth` | Google, Apple, Facebook OAuth |
+| `miru-sdk-persistent` | Room KMP, DataStore |
 
 :::tip
-Replace `<version>` with the latest release tag from [JitPack](https://jitpack.io/#wahidabd/miru-sdk).
+Replace `<version>` with the latest release from [Maven Central](https://central.sonatype.com/artifact/io.github.wahidabd/miru-sdk).
 :::
 
 ## Requirements
