@@ -50,9 +50,24 @@ The SDK internally registers these Koin modules:
 |---|---|
 | `coreModule` | DispatcherProvider, Logger |
 | `networkModule` | HttpClient, HttpClientFactory |
-| `platformModule` | Platform-specific implementations |
+| `platformModule` | Platform-specific implementations (Chucker on Android) |
 
 Your app modules are added alongside these via `additionalModules`.
+
+## HTTP Inspector (Chucker)
+
+On Android **debug** builds, the SDK automatically injects `ChuckerInterceptor` into the HTTP client so every request is captured and viewable via a notification in the status bar — no extra initialization code required.
+
+To activate it, add Chucker to your **app module's** `build.gradle.kts`:
+
+```kotlin
+dependencies {
+    debugImplementation("com.github.chuckerteam.chucker:library:4.3.1")
+    releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.3.1")
+}
+```
+
+The `no-op` variant is required for release builds — it has the same API but does nothing, ensuring zero overhead in production. On iOS, the interceptor list is simply empty and the platform compiles normally.
 
 ## Compose Injection
 

@@ -6,13 +6,12 @@ plugins {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "com.miru.sdk.network"
         compileSdk = 37
         minSdk = 24
     }
 
-    iosX64()
     iosArm64()
     iosSimulatorArm64()
 

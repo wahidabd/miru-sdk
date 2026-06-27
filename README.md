@@ -26,6 +26,7 @@ Each module follows **Clean Architecture** principles with clear separation into
 - **Firebase** — Remote Config + FCM topic management with KMP support
 - **Social Auth** — Google, Apple, Facebook OAuth with pre-built sign-in buttons
 - **Persistent** — Room KMP local database + DataStore preferences with convenient wrappers
+- **HTTP Inspector** — Chucker built-in for Android debug builds; zero-config, automatic, no overhead in release
 - **Configurable** — Override themes, API configs, and inject custom modules per project
 
 ---
@@ -164,19 +165,20 @@ sequenceDiagram
 
 | Technology | Version | Purpose |
 |---|---|---|
-| Kotlin | 2.3.0 | Language |
-| Compose Multiplatform | 1.10.0 | Shared UI |
-| Ktor | 3.4.1 | HTTP Client |
-| Koin | 4.1.0 | Dependency Injection |
-| Kotlinx Serialization | 1.7.3 | JSON parsing |
-| Kotlinx Coroutines | 1.9.0 | Async programming |
-| Firebase KMP (GitLive) | 2.1.0 | Remote Config, FCM |
+| Kotlin | 2.4.0 | Language |
+| Compose Multiplatform | 1.11.1 | Shared UI |
+| Ktor | 3.5.1 | HTTP Client |
+| Koin | 4.2.2 | Dependency Injection |
+| Kotlinx Serialization | 1.11.0 | JSON parsing |
+| Kotlinx Coroutines | 1.11.0 | Async programming |
+| Firebase KMP (GitLive) | 2.4.0 | Remote Config, FCM |
 | KMPAuth | 2.5.0-alpha01 | Google, Apple, Facebook OAuth |
 | Room KMP | 2.8.4 | Local database |
 | DataStore KMP | 1.2.1 | Preferences storage |
-| Coil | 3.0.4 | Image loading |
+| Coil | 3.5.0 | Image loading |
 | Napier | 2.7.1 | Multiplatform logging |
-| AGP | 9.0.0 | Android build |
+| Chucker | 4.3.1 | Android HTTP inspector (debug) |
+| AGP | 9.2.1 | Android build |
 
 ---
 
@@ -782,6 +784,23 @@ authManager.signOut()
 | Apple | iOS only | Native ASAuthorization (iosMain) |
 | Facebook | Android + iOS | Facebook SDK (expect/actual) |
 
+### HTTP Inspector (Chucker)
+
+Chucker is automatically activated on Android **debug** builds with zero consumer configuration. Every HTTP request made through the SDK's `HttpClient` is captured and accessible via a notification in the status bar.
+
+**Consumer app setup** — add Chucker to your app's `build.gradle.kts`:
+
+```kotlin
+dependencies {
+    debugImplementation("com.github.chuckerteam.chucker:library:4.3.1")
+    releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.3.1")
+}
+```
+
+That's it — no initialization code needed. The SDK's `PlatformModule` picks up `ChuckerInterceptor` via Koin and injects it into OkHttp automatically. In release builds, the no-op variant is used so there is zero overhead.
+
+> Chucker is Android-only. iOS builds compile and run normally — the interceptor list is simply empty on that platform.
+
 ---
 
 ### Persistent
@@ -969,11 +988,16 @@ miru-sdk/
 │       └── iosMain/kotlin/            # [data]   iOS DataStore + Room path
 │
 ├── di/                                # Dependency injection (wiring all layers)
-│   └── src/commonMain/kotlin/
-│       └── com/miru/sdk/di/
-│           ├── MiruSdkInitializer.kt  # SDK entry point
-│           ├── KoinExt.kt             # Compose injection helpers
-│           └── modules/               # CoreModule, NetworkModule, PlatformModule
+│   └── src/
+│       ├── commonMain/kotlin/
+│       │   └── com/miru/sdk/di/
+│       │       ├── MiruSdkInitializer.kt  # SDK entry point
+│       │       ├── KoinExt.kt             # Compose injection helpers
+│       │       └── modules/               # CoreModule, NetworkModule, PlatformModule
+│       └── androidMain/kotlin/
+│           └── com/miru/sdk/di/
+│               └── modules/
+│                   └── PlatformModule.android.kt  # Provides ChuckerInterceptor (debug)
 │
 ├── sample/                            # Sample News Reader app (Android + iOS)
 │   ├── src/
@@ -1022,7 +1046,7 @@ The sample app uses [NewsAPI.org](https://newsapi.org) to fetch real headlines a
 NEWS_API_KEY=your_api_key_here
 ```
 
-Copy `sample/env.properties.example` and fill in your key from [newsapi.org](https://newsapi.org).
+Copy `sample/env.properties.example` and fill in your key from [newsapi.org](https://newsapi.org). On a debug build, **Chucker** is active — tap the notification to inspect all HTTP requests made by the app.
 
 **iOS** — open `sample/iosApp/iosApp.xcodeproj` in Xcode. The API key is configured in `sample/iosApp/Config.xcconfig`. Build and run on a simulator or device — the Kotlin framework compiles automatically via a Gradle build phase.
 
@@ -1034,9 +1058,10 @@ The sample follows the same layered architecture as the SDK: DTOs and API client
 
 ## Requirements
 
-- Kotlin 2.3.0+
-- Android: minSdk 24, compileSdk 36
-- iOS: iosX64, iosArm64, iosSimulatorArm64
+- Kotlin 2.4.0+
+- Compose Multiplatform 1.11.1+
+- Android: minSdk 24, compileSdk 37
+- iOS: iosArm64, iosSimulatorArm64 (Apple Silicon)
 - Gradle 9.1+
 - JDK 21+
 

@@ -69,10 +69,23 @@ dependencies {
 Replace `<version>` with the latest release from [Maven Central](https://central.sonatype.com/artifact/io.github.wahidabd/miru-sdk).
 :::
 
+## Chucker HTTP Inspector (Android Debug)
+
+To enable the built-in HTTP inspector on Android debug builds, add Chucker to your **app module**:
+
+```kotlin
+dependencies {
+    debugImplementation("com.github.chuckerteam.chucker:library:4.3.1")
+    releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.3.1")
+}
+```
+
+No initialization code needed — the SDK's DI module picks it up automatically. See [DI module](/docs/modules/di#http-inspector-chucker) for details.
+
 ## Requirements
 
-- Kotlin 2.3.0+
-- AGP 9.0.0+
-- Android `minSdk` 24, `compileSdk` 36
-- iOS deployment target 16.0+
-- Compose Multiplatform 1.10.0+
+- Kotlin 2.4.0+
+- AGP 9.2.0+
+- Android `minSdk` 24, `compileSdk` 37
+- iOS: `iosArm64`, `iosSimulatorArm64` (Apple Silicon)
+- Compose Multiplatform 1.11.1+
