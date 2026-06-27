@@ -1,15 +1,15 @@
 package com.miru.sdk.di.modules
 
+import com.chuckerteam.chucker.api.ChuckerInterceptor
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
-/**
- * Android-specific Koin module providing platform-dependent implementations.
- *
- * Includes Android-specific services and configurations that are not needed
- * on other platforms.
- */
 actual fun platformModule(): Module = module {
-    // Platform-specific Android dependencies can be added here
-    // Examples: SharedPreferences, DataStore, Android Context, etc.
+    single<List<Any>>(named("networkInterceptors")) {
+        listOf(
+            ChuckerInterceptor.Builder(androidContext()).build()
+        )
+    }
 }
