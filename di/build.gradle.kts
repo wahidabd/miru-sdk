@@ -32,6 +32,7 @@ kotlin {
 
         androidMain.dependencies {
             implementation(libs.koin.android)
+            implementation(libs.chucker)
         }
 
         commonTest.dependencies {
@@ -39,3 +40,4 @@ kotlin {
         }
     }
 }
+

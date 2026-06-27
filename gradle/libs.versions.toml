@@ -34,6 +34,7 @@ coil = "3.0.4"
 
 # Logging
 napier = "2.7.1"
+chucker = "4.0.0"
 
 # KotlinX Immutable Collections
 collections-immutable = "0.3.8"
@@ -132,6 +133,10 @@ androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.r
 
 # DataStore KMP
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+
+# Chucker HTTP Inspector
+chucker = { module = "com.github.chuckerteam.chucker:library", version.ref = "chucker" }
+chucker-no-op = { module = "com.github.chuckerteam.chucker:library-no-op", version.ref = "chucker" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
