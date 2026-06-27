@@ -1,5 +1,3 @@
-import com.vanniktech.maven.publish.SonatypeHost
-
 plugins {
     id("com.vanniktech.maven.publish")
 }
@@ -7,7 +5,7 @@ plugins {
 val artifactId = if (project.name == "miru-sdk") "miru-sdk" else "miru-sdk-${project.name}"
 
 mavenPublishing {
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    publishToMavenCentral()
     signAllPublications()
 
     coordinates(project.group.toString(), artifactId, project.version.toString())
@@ -15,7 +13,7 @@ mavenPublishing {
     pom {
         name.set(artifactId)
         description.set("Kotlin Multiplatform SDK for accelerating mobile development")
-        inceptionYear.set("2025")
+        inceptionYear.set("2026")
         url.set("https://github.com/wahidabd/miru-sdk")
 
         licenses {
