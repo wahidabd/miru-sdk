@@ -32,7 +32,7 @@ kotlin {
 
         androidMain.dependencies {
             implementation(libs.koin.android)
-            implementation(libs.chucker)
+            compileOnly(libs.chucker)
         }
 
         commonTest.dependencies {
