@@ -3,6 +3,7 @@ package com.miru.sdk.sample
 import android.app.Application
 import com.miru.sdk.di.MiruSdkConfig
 import com.miru.sdk.di.MiruSdkInitializer
+import com.miru.sdk.di.initialize
 import com.miru.sdk.network.config.NetworkConfig
 import com.miru.sdk.persistent.database.MiruDatabaseInitializer
 import com.miru.sdk.persistent.persistentModule
@@ -35,7 +36,8 @@ class SampleApplication : Application() {
 
         // Initialize Miru SDK with NewsAPI.org base URL
         MiruSdkInitializer.initialize(
-            MiruSdkConfig(
+            context = this,
+            config = MiruSdkConfig(
                 networkConfig = NetworkConfig(
                     baseUrl = "https://newsapi.org/v2/",
                     enableLogging = true

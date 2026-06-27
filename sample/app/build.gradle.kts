@@ -62,4 +62,8 @@ dependencies {
 
     // Logging
     implementation(libs.napier)
+
+    // Chucker HTTP inspector (debug only)
+    debugImplementation(libs.chucker)
+    releaseImplementation(libs.chucker.no.op)
 }
