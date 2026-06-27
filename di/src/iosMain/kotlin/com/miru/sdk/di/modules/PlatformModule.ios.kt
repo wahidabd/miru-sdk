@@ -6,6 +6,6 @@ import org.koin.dsl.module
 
 actual fun platformModule(): Module = module {
     single<List<Any>>(named("networkInterceptors")) {
-        emptyList()
+        emptyList<Any>()
     }
 }
