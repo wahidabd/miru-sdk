@@ -12,7 +12,7 @@ actual fun platformModule(): Module = module {
             val context = androidContext()
             val interceptor = com.chuckerteam.chucker.api.ChuckerInterceptor.Builder(context).build()
             listOf(interceptor)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             MiruLogger.w(
                 tag = "PlatformModule",
                 message = "Chucker interceptor unavailable: ${e.message}. " +
