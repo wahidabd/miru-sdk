@@ -11,5 +11,5 @@ plugins {
 
 allprojects {
     group = "io.github.wahidabd"
-    version = "0.1.8"
+    version = "0.1.9"
 }
