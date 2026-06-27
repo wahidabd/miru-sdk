@@ -19,7 +19,7 @@ abstract class SampleDatabase : RoomDatabase() {
     abstract fun bookmarkDao(): BookmarkDao
 }
 
-/**
- * Room auto-generates this constructor.
- */
-expect object SampleDatabaseConstructor : RoomDatabaseConstructor<SampleDatabase>
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+expect object SampleDatabaseConstructor : RoomDatabaseConstructor<SampleDatabase> {
+    override fun initialize(): SampleDatabase
+}

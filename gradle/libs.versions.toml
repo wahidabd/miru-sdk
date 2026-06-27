@@ -1,54 +1,55 @@
 [versions]
 # Maven Publish
-mavenPublish = "0.30.0"
+gradleMavenPublishPlugin = "0.37.0"
+mavenPublish = "0.37.0"
 
 # Kotlin & Compose
-kotlin = "2.3.0"
-compose-multiplatform = "1.10.0"
-agp = "9.0.0"
+kotlin = "2.4.0"
+compose-multiplatform = "1.10.2"
+agp = "9.0.1"
 
 # Coroutines
-coroutines = "1.9.0"
+coroutines = "1.11.0"
 
 # Serialization
-serialization = "1.7.3"
+serialization = "1.11.0"
 
 # Ktor
-ktor = "3.4.1"
+ktor = "3.5.1"
 
 # Koin
-koin = "4.1.0"
-koin-compose = "4.1.0"
+koin = "4.2.2"
+koin-compose = "4.2.2"
 
 # Lifecycle
-lifecycle = "2.10.0-beta01"
+lifecycle = "2.10.0"
 
 # Navigation
-navigation = "2.9.0-alpha14"
+navigation = "2.9.2"
 
 # DateTime
-datetime = "0.6.1"
+datetime = "0.8.0"
 
 # Image Loading
 coil = "3.0.4"
 
 # Logging
 napier = "2.7.1"
-chucker = "4.0.0"
+chucker = "4.3.1"
 
 # KotlinX Immutable Collections
-collections-immutable = "0.3.8"
+collections-immutable = "0.5.0"
 
 # Firebase (GitLive KMP SDK)
-gitlive-firebase = "2.1.0"
+gitlive-firebase = "2.4.0"
 firebase-android = "33.7.0"
 
 # Auth (KMPAuth)
 kmpauth = "2.5.0-alpha01"
-facebook-android-login = "17.0.0"
+facebook-android-login = "18.3.0"
 
 # Activity Compose (for sample app)
-activity-compose = "1.10.1"
+activity-compose = "1.13.0"
 
 # Persistent (Room + DataStore)
 room = "2.8.4"
@@ -61,6 +62,7 @@ datastore = "1.2.1"
 desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.4" }
 
 # Kotlin
+gradle-maven-publish-plugin = { module = "com.vanniktech:gradle-maven-publish-plugin", version.ref = "gradleMavenPublishPlugin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 
 # Coroutines
@@ -114,9 +116,9 @@ firebase-messaging = { module = "dev.gitlive:firebase-messaging", version.ref = 
 
 # Firebase Android SDK (explicit — BOM platform() deprecated in Kotlin 2.3 KMP)
 firebase-android-common = { module = "com.google.firebase:firebase-common-ktx", version = "21.0.0" }
-firebase-android-config = { module = "com.google.firebase:firebase-config-ktx", version = "22.0.1" }
-firebase-android-messaging = { module = "com.google.firebase:firebase-messaging", version = "24.1.0" }
-firebase-android-auth = { module = "com.google.firebase:firebase-auth-ktx", version = "23.1.0" }
+firebase-android-config = { module = "com.google.firebase:firebase-config-ktx", version = "22.1.2" }
+firebase-android-messaging = { module = "com.google.firebase:firebase-messaging", version = "25.1.0" }
+firebase-android-auth = { module = "com.google.firebase:firebase-auth-ktx", version = "23.2.1" }
 
 # KMPAuth
 kmpauth-google = { module = "io.github.mirzemehdi:kmpauth-google", version.ref = "kmpauth" }

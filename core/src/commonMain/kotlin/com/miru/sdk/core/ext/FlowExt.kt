@@ -38,7 +38,7 @@ fun <T> Flow<T>.asResource(): Flow<Resource<T>> = flow {
 fun <T> Flow<T>.throttleFirst(windowDuration: Long): Flow<T> = flow {
     var lastEmitTime = 0L
     collect { value ->
-        val currentTime = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
+        val currentTime = kotlin.time.Clock.System.now().toEpochMilliseconds()
         if (currentTime - lastEmitTime >= windowDuration) {
             lastEmitTime = currentTime
             emit(value)

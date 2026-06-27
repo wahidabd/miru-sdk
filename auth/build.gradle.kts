@@ -43,6 +43,8 @@ kotlin {
         androidMain.dependencies {
             // Facebook Android SDK
             implementation(libs.facebook.login)
+            // ActivityResultRegistryOwner (needed by Facebook login)
+            implementation(libs.androidx.activity.compose)
         }
 
         commonTest.dependencies {

@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-    implementation("com.vanniktech:gradle-maven-publish-plugin:0.30.0")
+    implementation(libs.gradle.maven.publish.plugin)
 }
