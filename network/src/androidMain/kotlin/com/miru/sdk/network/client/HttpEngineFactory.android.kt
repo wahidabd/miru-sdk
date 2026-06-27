@@ -2,10 +2,14 @@ package com.miru.sdk.network.client
 
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
+import okhttp3.Interceptor
 
-/**
- * Android-specific HTTP client engine implementation using OkHttp.
- */
-actual fun createHttpEngine(): HttpClientEngine {
-    return OkHttp.create()
+actual fun createHttpEngine(interceptors: List<Any>): HttpClientEngine {
+    return OkHttp.create {
+        config {
+            interceptors.filterIsInstance<Interceptor>().forEach { interceptor ->
+                addInterceptor(interceptor)
+            }
+        }
+    }
 }

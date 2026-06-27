@@ -8,7 +8,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel as KtorLogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
@@ -18,27 +17,20 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-/**
- * Factory for creating and configuring Ktor HTTP clients.
- */
 object HttpClientFactory {
-    /**
-     * Create an HttpClient with the given configuration.
-     *
-     * @param config Network configuration settings
-     * @param tokenProvider Optional token provider for handling authentication
-     * @return Configured HttpClient instance
-     */
-    fun create(config: NetworkConfig, tokenProvider: TokenProvider? = null): HttpClient {
-        return HttpClient(createHttpEngine()) {
-            // Configure timeouts
+
+    fun create(
+        config: NetworkConfig,
+        tokenProvider: TokenProvider? = null,
+        interceptors: List<Any> = emptyList()
+    ): HttpClient {
+        return HttpClient(createHttpEngine(interceptors)) {
             install(HttpTimeout) {
                 connectTimeoutMillis = config.connectTimeout
                 requestTimeoutMillis = config.requestTimeout
                 socketTimeoutMillis = config.socketTimeout
             }
 
-            // Configure JSON serialization
             install(ContentNegotiation) {
                 json(
                     Json {
@@ -49,7 +41,6 @@ object HttpClientFactory {
                 )
             }
 
-            // Configure logging
             if (config.enableLogging) {
                 install(Logging) {
                     logger = object : Logger {
@@ -61,7 +52,6 @@ object HttpClientFactory {
                 }
             }
 
-            // Configure default requests
             install(DefaultRequest) {
                 url(config.baseUrl)
                 contentType(ContentType.Application.Json)
@@ -70,9 +60,6 @@ object HttpClientFactory {
         }
     }
 
-    /**
-     * Map network config log level to Ktor log level.
-     */
     private fun mapLogLevel(logLevel: LogLevel): KtorLogLevel {
         return when (logLevel) {
             LogLevel.NONE -> KtorLogLevel.NONE
