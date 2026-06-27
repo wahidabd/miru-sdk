@@ -3,7 +3,7 @@ package com.miru.sdk.sample.data.mapper
 import com.miru.sdk.core.mapper.BidirectionalMapper
 import com.miru.sdk.sample.data.model.BookmarkEntity
 import com.miru.sdk.sample.domain.model.Article
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlin.time.Clock
 
 /**

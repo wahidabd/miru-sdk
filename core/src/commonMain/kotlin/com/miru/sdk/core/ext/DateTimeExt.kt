@@ -17,6 +17,7 @@ import kotlinx.datetime.toLocalDateTime
 fun Instant.toLocalString(): String {
     return try {
         val dateTime = this.toLocalDateTime(TimeZone.currentSystemDefault())
+        @Suppress("DEPRECATION")
         "${dateTime.year}-${dateTime.monthNumber.toString().padStart(2, '0')}-" +
                 "${dateTime.dayOfMonth.toString().padStart(2, '0')} " +
                 "${dateTime.hour.toString().padStart(2, '0')}:" +
@@ -52,6 +53,7 @@ fun Instant.timeAgo(): String {
  * @return a formatted string in "YYYY-MM-DD" format
  */
 fun LocalDate.formatAsString(): String {
+    @Suppress("DEPRECATION")
     return "$year-${monthNumber.toString().padStart(2, '0')}-" +
             "${dayOfMonth.toString().padStart(2, '0')}"
 }

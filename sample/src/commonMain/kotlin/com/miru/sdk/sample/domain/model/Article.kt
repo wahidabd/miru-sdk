@@ -1,6 +1,6 @@
 package com.miru.sdk.sample.domain.model
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * Domain model representing a news article.
