@@ -15,7 +15,7 @@ val envProperties = Properties().apply {
 
 android {
     namespace = "com.miru.sdk.sample.app"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.miru.sdk.sample"

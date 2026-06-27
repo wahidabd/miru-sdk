@@ -54,6 +54,26 @@ git commit -m "chore: release $NEW_VERSION"
 git tag "v$NEW_VERSION"
 
 echo ""
-echo "Tagged v$NEW_VERSION. To publish:"
-echo "  git push && git push origin v$NEW_VERSION"
-echo "  ./gradlew publishAllPublicationsToMavenCentralRepository"
+echo "✓ Committed and tagged v$NEW_VERSION"
+echo ""
+
+# Confirm before push + publish
+read -rp "Push ke remote dan publish ke Maven Central? (y/N) " CONFIRM
+if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
+  echo "Dibatalkan. Jalankan manual jika mau:"
+  echo "  git push && git push origin v$NEW_VERSION"
+  echo "  ./gradlew publishAllPublicationsToMavenCentralRepository"
+  exit 0
+fi
+
+echo ""
+echo "→ Pushing..."
+git push
+git push origin "v$NEW_VERSION"
+
+echo ""
+echo "→ Publishing to Maven Central..."
+./gradlew publishAllPublicationsToMavenCentralRepository
+
+echo ""
+echo "✓ Release v$NEW_VERSION selesai!"

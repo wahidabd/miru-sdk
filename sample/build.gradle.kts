@@ -11,7 +11,7 @@ plugins {
 kotlin {
     androidLibrary {
         namespace = "com.miru.sdk.sample"
-        compileSdk = 36
+        compileSdk = 37
         minSdk = 24
     }
 
